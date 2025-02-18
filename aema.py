@@ -28,7 +28,6 @@ def gallica_api(api_root = 'https://gallica.bnf.fr/services/OAIRecord?ark=', ark
               "rights": [r.text for r in root.findall(".//dc:rights", namespaces={"dc": "http://purl.org/dc/elements/1.1/"})],
               "description": root.find(".//dc:description", namespaces={"dc": "http://purl.org/dc/elements/1.1/"}).text if root.find(".//dc:description", namespaces={"dc": "http://purl.org/dc/elements/1.1/"}) is not None else None,
           }
-          df = pd.DataFrame([data])
           json_output = json.dumps(data, indent=4, ensure_ascii=False).encode('utf8')
           return(json_output.decode())
       else:
