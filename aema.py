@@ -1,6 +1,6 @@
 def gallica_api(api_root = 'https://gallica.bnf.fr/services/OAIRecord?ark=', ark_id= 'btv1b104536783', verbose = True):
     """
-    Collect data from APIs
+    Collect Gallica data from different APIs
 
     :param api_root: API root path
     :param ark_id: Ark
@@ -12,7 +12,8 @@ def gallica_api(api_root = 'https://gallica.bnf.fr/services/OAIRecord?ark=', ark
     GALLICA_URL = api_root + ark_id
 
     if api_root == 'https://gallica.bnf.fr/services/OAIRecord?ark=':
-
+      if(verbose):
+         print("collect parametric data")
       resp = requests.get(GALLICA_URL)
       if resp.status_code == 200:
           xml_data = resp.text
@@ -34,11 +35,12 @@ def gallica_api(api_root = 'https://gallica.bnf.fr/services/OAIRecord?ark=', ark
           print(f"Error {resp.status_code}: Unable to fetch data from Gallica API")
 
     if api_root == 'https://gallica.bnf.fr/ark:/12148/':
-
+      if(verbose):
+         print("collect image thumbnail")
       GALLICA_URL = GALLICA_URL + '/thumbnail'
       resp = requests.get(GALLICA_URL)
-
       if resp.status_code == 200:
          return(resp.content)
       else:
           print(f"Failed to load image. HTTP Status Code: {resp.status_code}")
+
