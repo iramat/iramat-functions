@@ -1,42 +1,64 @@
 def db_connect(pg_creds = 'C:/Rprojects/iramat-test/credentials/pg_credentials.json', verbose = True):
-    """
-    Connect a database connection (engine)
+  """
+  Connect a database connection (engine)
 
-    :param pg_creds: my PG credentials (local)
-    """
-    from sqlalchemy import create_engine
-    import json
+  :param pg_creds: my PG credentials (local)
+  """
+  from sqlalchemy import create_engine
+  import json
 
-    # read credentials (secret) and connect the Pg DB
-    if verbose:
-        print("Read Pg")
-    with open(pg_creds, 'r') as file:
-        db_config = json.load(file)
-    connection_str = f"postgresql://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['dbname']}"
-    engine = create_engine(connection_str)
+  # read credentials (secret) and connect the Pg DB
+  if verbose:
+      print("Read Pg")
+  with open(pg_creds, 'r') as file:
+      db_config = json.load(file)
+  connection_str = f"postgresql://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['dbname']}"
+  engine = create_engine(connection_str)
 
-    return(engine)
+  return(engine)
 
 def db_query(query = "SELECT * FROM instrument_incertitude;", engine=None, verbose = True):
-    """
-    Query a database
-
-    :param query: a SQL query, default: View 'instrument_incertitude'
-    :param engine: a sqlalchemy.engine
-    """
-    import pandas as pd
-
-    df = pd.read_sql(query, engine)
-    return(df)
-
-
-def db_refbib(table = "instrument_incertitude", engine=None, output_format = "IEEE", verbose = True):
   """
-  Query a table of bibliographic references related to different view. This is different from bibliographic refrences related to rows. Bibliographic references are stored in the table '_refbib'. These references are stored as text, with a bibtex format, in the column 'ref_biblio ' 
+  Query a database
+
+  :param query: a SQL query, default: View 'instrument_incertitude'
+  :param engine: a sqlalchemy.engine
+  """
+  import pandas as pd
+
+  df = pd.read_sql(query, engine)
+  return(df)
+
+def db_store(data=None, verbose = True):
+  """
+  Store a dataset in a local temp file 
+
+  :param data: a dataset
+  """
+  import tempfile
+
+  tmp = tempfile.NamedTemporaryFile()
+  with open(tmp.name, 'w') as f:
+      f.write(data)
+  
+  return(tmp.name)
+
+
+def db_refbib(table = "instrument_incertitude", engine=None, output_format = "JSON", verbose = True):
+  """
+  Query a table of bibliographic references related to different views. This bibliographic reference is for the whole Postgres table or view. It is different from bibliographic references related to rows. Bibliographic references are stored in the table '_refbib'. These references are stored as text, in a bibtex layout, in the column 'ref_biblio'. 
 
   :param table: the selected table or view
   :param engine: a sqlalchemy.engine
-  :param output_format: the output format (default: IEEE)
+  :param output_format: the output format (default: JSON).
+
+  >>> # JSON format (JSON object)
+  >>> bibref_json = ch.db_refbib(table = "instrument_incertitude", engine=engine, output_format = "JSON")
+  >>> print(f"📚 Bibliographic Reference in JSON format:\n{bibref_json}")
+
+  >>> # IEEE format
+  >>> bibref_ieee = ch.db_refbib(table = "instrument_incertitude", engine=engine, output_format = "IEEE")
+  >>> print(f"📚 Bibliographic Reference in IEEE style:\n{bibref_ieee}")
   """
   import pandas as pd
   import json
@@ -60,11 +82,13 @@ def db_refbib(table = "instrument_incertitude", engine=None, output_format = "IE
     bibtex_entry = row[0]  # Extract the BibTeX string
   except:
       print("Pas d'entrée bibliographique pour cette vue")
-  
+
   if(output_format == "JSON"):
+    #TODO: check bibtex syntax
     bib_data = bibtexparser.loads(bibtex_entry)
     output = json.dumps(bib_data.entries, indent=4, ensure_ascii=False)
-    return(output)
+    bibref = json.loads(output)
+    return(bibref)
   if(output_format == "IEEE"):
     bib_data = parse_string(bibtex_entry, "bibtex")
     # Find the style formatter
@@ -76,3 +100,28 @@ def db_refbib(table = "instrument_incertitude", engine=None, output_format = "IE
     bibref = first_bib.text.render_as("text")
     return(bibref)
     # return(list(formatted_entries))
+
+def zn_metadata(meta_data = None, verbose = True):
+  """
+  Fill a metadata template to be pushed on Zenodo from a bibtex reference stored in Postgres (table '_refbib'). This function is called after `db_refbib()`
+
+  :param meta_data: a JSON object
+  """
+
+  #TODO: check values
+
+  metadata = {
+      'metadata': {
+          'title': meta_data[0]['title'],
+          'description': meta_data[0]['abstract'],
+          'upload_type': 'dataset',
+          'license': 'cc-by',
+          'subjects': [{"term": "Archaeometry", "identifier": "http://id.loc.gov/authorities/subjects/sh85122967", "scheme": "url"}],
+          'method': 'IRAMAT data entry methodology',
+          'creators': [{'name': meta_data[0]['author'],
+                        'affiliation': "IRAMAT"}],
+          'keywords': meta_data[0]['keywords'],
+          'dates': [{"start": meta_data[0]['year'], "end": meta_data[0]['year'], "type": "Collected", "description": "Lorem Ipsum dates"}],
+      }
+  }
+  return(metadata)
