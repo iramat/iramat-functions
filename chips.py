@@ -107,7 +107,7 @@ def zn_metadata(meta_data = None, verbose = True):
   :param meta_data: a JSON object
   """
 
-  #TODO: check values
+  #TODO: check values, map values (https://github.com/zoometh/iramat-test/blob/main/projects/citation/bibtex2zenodo.tsv)
 
   metadata = {
       'metadata': {
@@ -115,7 +115,9 @@ def zn_metadata(meta_data = None, verbose = True):
           'description': meta_data[0]['abstract'],
           'upload_type': 'dataset',
           'license': 'cc-by',
-          'subjects': [{"term": "Archaeometry", "identifier": "http://id.loc.gov/authorities/subjects/sh85122967", "scheme": "url"}],
+          'subjects': [{"term": "Archaeometry", "identifier": "http://id.loc.gov/authorities/subjects/sh85006517", "scheme": "url"},
+                       {"term": "laboratory methods", "identifier": "https://apps.usgs.gov/thesaurus/term-simple.php?thcode=2&code=619", "scheme": "url"},
+                       {"term": "chemical elements", "identifier": "https://apps.usgs.gov/thesaurus/term-simple.php?thcode=2&code=1427", "scheme": "url"}],
           'method': 'IRAMAT data entry methodology',
           'creators': [{'name': meta_data[0]['author'],
                         'affiliation': "IRAMAT"}],
