@@ -60,7 +60,6 @@ def db_refbib(table = "instrument_incertitude", engine=None, output_format = "JS
   >>> bibref_ieee = ch.db_refbib(table = "instrument_incertitude", engine=engine, output_format = "IEEE")
   >>> print(f"📚 Bibliographic Reference in IEEE style:\n{bibref_ieee}")
   """
-  import pandas as pd
   import json
   import psycopg2
   import bibtexparser
