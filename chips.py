@@ -1,4 +1,4 @@
-def db_connect(pg_creds = 'C:/Rprojects/iramat-test-functions/credentials/pg_credentials.json', verbose = True):
+def db_connect(pg_creds = 'C:/Users/TH282424/Rprojects/iramat-test/credentials/pg_credentials.json', verbose = True):
   """
   Connect a database connection (engine)
 
@@ -99,6 +99,25 @@ def db_refbib(table = "instrument_incertitude", engine=None, output_format = "JS
     bibref = first_bib.text.render_as("text")
     return(bibref)
     # return(list(formatted_entries))
+
+def py_tempfile(response=None, module_name = "bdd"):
+  """
+  Save a content (typically a GitHub hosted file) in a temp folder
+
+  :param response: a kind of requests.get(GitHub url)
+  :param module_name: the name to give to the module, default 'bdd'
+  """
+  import tempfile
+  import importlib.util
+
+  with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as tmp_file:
+    tmp_file.write(response.content)
+    tmp_file_path = tmp_file.name
+
+  # Import the module
+  spec = importlib.util.spec_from_file_location(module_name, tmp_file_path)
+  module = importlib.util.module_from_spec(spec)
+  spec.loader.exec_module(module)
 
 def zn_metadata(meta_data = None, verbose = True):
   """
