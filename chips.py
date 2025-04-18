@@ -1,4 +1,4 @@
-def db_connect(pg_creds = 'C:/Rprojects/iramat-test/credentials/pg_credentials.json', verbose = True):
+def db_connect(pg_creds = 'C:/Rprojects/iramat-test-functions/credentials/pg_credentials.json', verbose = True):
   """
   Connect a database connection (engine)
 
