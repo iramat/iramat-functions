@@ -1,4 +1,4 @@
-def ae_create_bulk(output_path="aeamena_data.xlsx", root_url = 'https://aema.huma-num.fr/back/public/api/', vocabs = [
+def create_bulkupload(output_path="aeamena_data.xlsx", root_url = 'https://aema.huma-num.fr/back/public/api/', vocabs = [
         "ateliers", "objettypes", "collections", "communes", "contexte", "denominations",
         "mesuretypes", "emetteurs", "fonctions", "depots", "matieres", "observations",
         "pays", "periodes", "series", "objetsoustypes", "techniques", "tresors",
