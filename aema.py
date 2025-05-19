@@ -5,7 +5,9 @@ def create_bulkupload(output_path="aeamena_data.xlsx", root_url = 'https://aema.
         "types", "descriptiftypes", "localisationtypes", "zones"
     ]
 ):
-    """Fetches AÉAMeNA vocabs data, writes them to Excel sheets, and adds dropdowns in a summary sheet."""
+    """Fetches AeMA vocabs data, writes them to Excel sheets, and adds dropdowns in a summary sheet."""
+    # TODO: transpose rows and columns in the Summary sheet
+
     import pandas as pd
     import requests
     from openpyxl import load_workbook
