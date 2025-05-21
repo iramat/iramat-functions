@@ -1,19 +1,8 @@
-def create_bulkupload(output_path="aeamena_data.xlsx", root_url = 'https://aema.huma-num.fr/back/public/api/', vocabs = [
-        "ateliers", "objettypes", "collections", "communes", "contextes", "denominations",
-        "mesuretypes", "emetteurs", "fonctions", "depots", "matieres", "observations",
-        "pays", "periodes", "series", "objetsoustypes", "techniques", "tresors",
-        "types", "descriptiftypes", "localisationtypes", "zones"
-    ]
-):
-    """Fetches AeMA vocabs data, writes them to Excel sheets, and adds dropdowns in a summary sheet."""
-    # TODO: transpose rows and columns in the Summary sheet
-
+def collect_vocab(vocabs = None, root_url = 'https://aema.huma-num.fr/back/public/api/'):
+# === 2. Fetch data ===
     import pandas as pd
     import requests
-    from openpyxl import load_workbook
-    from openpyxl.worksheet.datavalidation import DataValidation    
 
-    # === 2. Fetch data ===
     dfs = []
     for vocab in vocabs:
         url = f"{root_url}{vocab}"
@@ -27,6 +16,38 @@ def create_bulkupload(output_path="aeamena_data.xlsx", root_url = 'https://aema.
         except Exception as e:
             print(f"Error fetching {vocab}: {e}")
             dfs.append(pd.DataFrame())
+    return(dfs)
+
+def create_bulkupload(output_path="aeamena_data.xlsx", root_url = 'https://aema.huma-num.fr/back/public/api/', vocabs = [
+        "ateliers", "objettypes", "collections", "communes", "contextes", "denominations",
+        "mesuretypes", "emetteurs", "fonctions", "depots", "matieres", "observations",
+        "pays", "periodes", "series", "objetsoustypes", "techniques", "tresors",
+        "types", "descriptiftypes", "localisationtypes", "zones"
+    ]
+):
+    """Fetches AeMA vocabs data, writes them to Excel sheets, and adds dropdowns in a summary sheet."""
+    # TODO: transpose rows and columns in the Summary sheet
+
+    import pandas as pd
+    from openpyxl import load_workbook
+    from openpyxl.worksheet.datavalidation import DataValidation    
+
+    dfs=collect_vocab(vocabs=vocabs, root_url=root_url)
+
+    # # === 2. Fetch data ===
+    # dfs = []
+    # for vocab in vocabs:
+    #     url = f"{root_url}{vocab}"
+    #     try:
+    #         response = requests.get(url)
+    #         response.raise_for_status()
+    #         data = response.json()
+    #         for item in data:
+    #             item.pop('id', None)
+    #         dfs.append(pd.DataFrame(data))
+    #     except Exception as e:
+    #         print(f"Error fetching {vocab}: {e}")
+    #         dfs.append(pd.DataFrame())
 
     # === 3. Create summary sheet ===
     summary_rows = [
