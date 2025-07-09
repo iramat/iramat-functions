@@ -14,12 +14,17 @@ urls = {
 }
 result = api_pg_dataset_linechart(urls["dataset"], urls["reference"], log10=True)
 df_log = result["elements"]
+df_data = result["data"]
 
 # Create the Dash app
 # app = dash.Dash(__name__)
 # app = dash.Dash(__name__, requests_pathname_prefix='/dash/')
 app = dash.Dash(__name__)
 
+
+# print(type(df_log))
+print(df_log.shape[0])
+print(df_data.shape[0])
 
 # Build the line chart using Plotly
 fig = go.Figure()
@@ -28,7 +33,10 @@ for idx, row in df_log.iterrows():
         x=df_log.columns,
         y=row.values,
         mode='lines+markers',
-        name=str(idx)
+        # name=str(idx)
+        name = df_data.loc[idx, 'site_name']
+        # TODO: hover: 'site_name' + 'sample_name' + 'typology'
+        # TODO: on click: ??
     ))
 
 fig.update_layout(title="dataset_adisser17",
