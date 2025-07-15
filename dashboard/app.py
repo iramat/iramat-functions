@@ -5,6 +5,9 @@ import re
 from charts import api_pg_dataset_linechart
 from urls import read_data_urls
 
+web = False
+local = not web
+
 df = read_data_urls(read_ref=False)
 
 # Extract slugs for URL routing
@@ -12,7 +15,14 @@ dataset_slugs = df['dataset_name']
 dataset_map = dict(zip(dataset_slugs, df['url_data']))
 
 # Initialize app
-app = dash.Dash(__name__)
+if(local):
+    app = dash.Dash(__name__)
+if(web):
+    app = dash.Dash(
+    __name__,
+    requests_pathname_prefix='/dash/',
+    routes_pathname_prefix='/dash/'
+)
 app.title = "Dynamic Dataset Viewer"
 
 app.layout = html.Div([
@@ -103,8 +113,12 @@ def generate_dataset_page(dataset_url):
 @app.callback(Output('page-content', 'children'),
               Input('url', 'pathname'))
 def display_page(pathname):
-    slug = pathname.strip("/")
 
+    if(local):
+        slug = pathname.strip("/")
+    if(web):
+        slug = pathname.rsplit("/", 1)[-1]
+        
     if slug in dataset_map:
         return generate_dataset_page(dataset_map[slug])
     else:
