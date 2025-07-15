@@ -1,55 +1,118 @@
 import dash
-from dash import dcc, html
-import plotly.express as px
+from dash import dcc, html, Input, Output
 import plotly.graph_objects as go
-import pandas as pd
-import numpy as np
-import requests
+import re
 from charts import api_pg_dataset_linechart
+from urls import read_data_urls
 
-# Fetch data once for this example (could be dynamic)
-urls = {
-    "dataset": "http://157.136.252.188:3000/dataset_adisser17",
-    "reference": "http://157.136.252.188:3000/ref_elements"
-}
-result = api_pg_dataset_linechart(urls["dataset"], urls["reference"], log10=True)
-df_log = result["elements"]
-df_data = result["data"]
+df = read_data_urls(read_ref=False)
 
-# Create the Dash app
-# app = dash.Dash(__name__)
-# app = dash.Dash(__name__, requests_pathname_prefix='/dash/')
+# Extract slugs for URL routing
+dataset_slugs = df['dataset_name']
+dataset_map = dict(zip(dataset_slugs, df['url_data']))
+
+# Initialize app
 app = dash.Dash(__name__)
+app.title = "Dynamic Dataset Viewer"
 
-
-# print(type(df_log))
-print(df_log.shape[0])
-print(df_data.shape[0])
-
-# Build the line chart using Plotly
-fig = go.Figure()
-for idx, row in df_log.iterrows():
-    fig.add_trace(go.Scatter(
-        x=df_log.columns,
-        y=row.values,
-        mode='lines+markers',
-        # name=str(idx)
-        name = df_data.loc[idx, 'site_name']
-        # TODO: hover: 'site_name' + 'sample_name' + 'typology'
-        # TODO: on click: ??
-    ))
-
-fig.update_layout(title="dataset_adisser17",
-                  xaxis_title="Element",
-                  yaxis_title="Log10 Value")
-
-# App Layout
 app.layout = html.Div([
-    html.H1("CHIPS Dashboard"),
-    dcc.Graph(figure=fig)
+    dcc.Location(id='url', refresh=False),
+    html.Div(id='page-content')
 ])
 
+def generate_dataset_page(dataset_url):
+    result = api_pg_dataset_linechart(dataset_url, df["url_reference"], log10=True)
+    df_log = result["elements"]
+    df_data = result["data"]
+
+    fig = go.Figure()
+    for idx, row in df_log.iterrows():
+        fig.add_trace(go.Scatter(
+            x=df_log.columns,
+            y=row.values,
+            mode='lines+markers',
+            name=df_data.loc[idx, 'site_name']
+        ))
+
+    fig.update_layout(
+        title=f"Dataset: {re.search(r'[^/]+$', dataset_url).group()}",
+        xaxis_title="Element",
+        yaxis_title="Log10 Value"
+    )
+
+    # Layout with sidebar + main panel
+    return html.Div(style={'display': 'flex', 'height': '100vh'}, children=[
+        # Sidebar
+        html.Div(style={
+            'width': '250px',
+            'padding': '20px',
+            'backgroundColor': '#f2f2f2',
+            'overflowY': 'auto'
+        }, children=[
+            html.H2("Datasets"),
+            html.Ul([
+                html.Li(html.A(slug, href=f"/{slug}")) for slug in dataset_slugs
+            ])
+        ]),
+
+        # Main content
+        html.Div(style={
+            'flex': '1',
+            'padding': '20px'
+        }, children=[
+            html.H1("CHIPS Dashboard"),
+            dcc.Graph(figure=fig)
+        ])
+    ])
+
+
+# # Layout Generator Function
+# def generate_dataset_page(dataset_url):
+#     result = api_pg_dataset_linechart(dataset_url, df["url_reference"], log10=True)
+#     df_log = result["elements"]
+#     df_data = result["data"]
+
+#     fig = go.Figure()
+#     for idx, row in df_log.iterrows():
+#         fig.add_trace(go.Scatter(
+#             x=df_log.columns,
+#             y=row.values,
+#             mode='lines+markers',
+#             name=df_data.loc[idx, 'site_name']
+#         ))
+
+#     fig.update_layout(
+#         title=f"Dataset: {re.search(r'[^/]+$', dataset_url).group()}",
+#         xaxis_title="Element",
+#         yaxis_title="Log10 Value"
+#     )
+
+#     return html.Div([
+#         html.H1("CHIPS Dashboard"),
+#         html.Div([
+#             html.H2("Available Datasets:"),
+#             html.Ul([
+#                 html.Li(html.A(slug, href=f"/{slug}")) for slug in dataset_slugs
+#             ])
+#         ]),
+#         dcc.Graph(figure=fig)
+#     ])
+    
+
+# Route Handler
+@app.callback(Output('page-content', 'children'),
+              Input('url', 'pathname'))
+def display_page(pathname):
+    slug = pathname.strip("/")
+
+    if slug in dataset_map:
+        return generate_dataset_page(dataset_map[slug])
+    else:
+        return html.Div([
+            html.H2("404 - Page not found"),
+            html.P("Invalid dataset slug in URL.")
+        ])
+
+# Run server
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=8050)
-    # app.run(debug=False)
-
