@@ -44,11 +44,37 @@ def generate_dataset_page(dataset_url):
             name=df_data.loc[idx, 'site_name']
         ))
 
+    # fig.update_layout(
+    #     title=f"Dataset: {re.search(r'[^/]+$', dataset_url).group()}",
+    #     xaxis_title="Element",
+    #     yaxis_title="Log10 Value"
+    # )
+    dataset_name = re.search(r'[^/]+$', dataset_url).group()
     fig.update_layout(
-        title=f"Dataset: {re.search(r'[^/]+$', dataset_url).group()}",
-        xaxis_title="Element",
-        yaxis_title="Log10 Value"
+    title=dict(
+        text=f"Dataset: {dataset_name}",
+        x=0.5,
+        xanchor='left'
+    ),
+    xaxis_title="Element",
+    yaxis_title="Log10 Value",
+    annotations=[
+        dict(
+            text=f"API (data source): <a href='{dataset_url}' target='_blank'>{dataset_url}</a>",
+            x=0.5,
+            y=1.05,
+            xref='paper',
+            yref='paper',
+            showarrow=False,
+            font=dict(size=14),
+            align='left'
+        )
+    ]
     )
+    # if(web):
+    #     api_href = f"/dash/{slug}"
+    # if(local):
+    #     api_href = f"/dash/{slug}"
 
     # Layout with sidebar + main panel
     return html.Div(style={'display': 'flex', 'height': '100vh'}, children=[
@@ -61,7 +87,7 @@ def generate_dataset_page(dataset_url):
         }, children=[
             html.H2("Datasets"),
             html.Ul([
-                html.Li(html.A(slug, href=f"/{slug}")) for slug in dataset_slugs
+                html.Li(html.A(slug, href=f"/dash/{slug}")) for slug in dataset_slugs
             ])
         ]),
 
@@ -75,40 +101,6 @@ def generate_dataset_page(dataset_url):
         ])
     ])
 
-
-# # Layout Generator Function
-# def generate_dataset_page(dataset_url):
-#     result = api_pg_dataset_linechart(dataset_url, df["url_reference"], log10=True)
-#     df_log = result["elements"]
-#     df_data = result["data"]
-
-#     fig = go.Figure()
-#     for idx, row in df_log.iterrows():
-#         fig.add_trace(go.Scatter(
-#             x=df_log.columns,
-#             y=row.values,
-#             mode='lines+markers',
-#             name=df_data.loc[idx, 'site_name']
-#         ))
-
-#     fig.update_layout(
-#         title=f"Dataset: {re.search(r'[^/]+$', dataset_url).group()}",
-#         xaxis_title="Element",
-#         yaxis_title="Log10 Value"
-#     )
-
-#     return html.Div([
-#         html.H1("CHIPS Dashboard"),
-#         html.Div([
-#             html.H2("Available Datasets:"),
-#             html.Ul([
-#                 html.Li(html.A(slug, href=f"/{slug}")) for slug in dataset_slugs
-#             ])
-#         ]),
-#         dcc.Graph(figure=fig)
-#     ])
-    
-
 # Route Handler
 @app.callback(Output('page-content', 'children'),
               Input('url', 'pathname'))
@@ -118,7 +110,7 @@ def display_page(pathname):
         slug = pathname.strip("/")
     if(web):
         slug = pathname.rsplit("/", 1)[-1]
-        
+
     if slug in dataset_map:
         return generate_dataset_page(dataset_map[slug])
     else:
