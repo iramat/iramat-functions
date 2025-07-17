@@ -25,6 +25,7 @@ if web:
     )
 
 app.title = tit
+app._favicon = ("logo.ico")
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     html.Div(id='page-content')
@@ -82,55 +83,6 @@ def create_figure(dataset_url, log10=True, selected_sites=None):
         ]
     )
     return fig
-
-
-# ----------- PAGE LAYOUT FUNCTION ---------------- #
-# def generate_dataset_page(dataset_url):
-#     return html.Div(style={'display': 'flex', 'height': '100vh'}, children=[
-#         # Sidebar
-#         html.Div(style={
-#             'width': '250px',
-#             'padding': '20px',
-#             'backgroundColor': '#f2f2f2',
-#             'overflowY': 'auto'
-#         }, children=[
-#             html.H2("Datasets"),
-#             html.Ul([
-#                 html.Li(html.A(slug, href=f"/dash/{slug}")) if web else html.Li(html.A(slug, href=f"/{slug}"))
-#                 for slug in dataset_slugs
-#             ])
-#         ]),
-
-#         # Main Content
-#         html.Div(style={
-#             'flex': '1',
-#             'padding': '20px'
-#         }, children=[
-#             html.H1(tit),
-
-#             dcc.RadioItems(
-#                 id='scale-selector',
-#                 options=[
-#                     {'label': 'Log Scale', 'value': 'log'},
-#                     {'label': 'Linear Scale', 'value': 'linear'}
-#                 ],
-#                 value='log',
-#                 labelStyle={'display': 'inline-block', 'margin-right': '10px'}
-#             ),
-
-#             html.Label("Filter by Site:"),
-#             dcc.Checklist(
-#                 id='site-filter',
-#                 options=[],   # populated by callback
-#                 value=[],     # selected by default
-#                 labelStyle={'display': 'block'},
-#                 inputStyle={'margin-right': '10px'}
-#             ),
-
-#             dcc.Store(id='current-dataset-url', data=dataset_url),
-#             dcc.Graph(id='dataset-graph')
-#         ])
-#     ])
 
 def generate_dataset_page(dataset_url):
     return html.Div(style={'display': 'flex', 'height': '100vh'}, children=[
