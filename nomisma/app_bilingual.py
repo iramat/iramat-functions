@@ -632,7 +632,7 @@ def update_site_filter(dataset_url, select_clicks, unselect_clicks):
 
     if triggered_id in ('select-all-sites', 'current-dataset-url'):
         return options, site_names
-    # elif triggered_id == 'unselect-all-sites':
+    elif triggered_id == 'unselect-all-sites':
         return options, []
     else:
         raise dash.exceptions.PreventUpdate
