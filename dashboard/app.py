@@ -27,8 +27,8 @@ from get_data import get_data
 from urls import read_data_urls
 
 
-web = False
-local = not web
+# web = False
+# local = not web
 
 tit = "CHIPS Dashboard"
 
@@ -36,22 +36,28 @@ df = read_data_urls(read_ref=False)
 dataset_slugs = df['dataset_name']
 dataset_map = dict(zip(dataset_slugs, df['url_data']))
 
-# Initialize app
-if local:
-    # app = dash.Dash(__name__)
-    app = dash.Dash(
-        __name__,
-        requests_pathname_prefix='/dash/',
-        routes_pathname_prefix='/dash/',
-        suppress_callback_exceptions=True
-    )
+# # Initialize app
+app = dash.Dash(
+    __name__,
+    requests_pathname_prefix='/dash/',
+    routes_pathname_prefix='/dash/',
+    suppress_callback_exceptions=True
+)
+# if local:
+#     # app = dash.Dash(__name__)
+#     app = dash.Dash(
+#         __name__,
+#         requests_pathname_prefix='/dash/',
+#         routes_pathname_prefix='/dash/',
+#         suppress_callback_exceptions=True
+#     )
 
-if web:
-    app = dash.Dash(
-        __name__,
-        requests_pathname_prefix='/dash/',
-        routes_pathname_prefix='/dash/'
-    )
+# if web:
+#     app = dash.Dash(
+#         __name__,
+#         requests_pathname_prefix='/dash/',
+#         routes_pathname_prefix='/dash/'
+#     )
 
 app.title = tit
 app._favicon = ("logo.ico")
