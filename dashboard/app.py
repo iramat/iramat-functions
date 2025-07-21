@@ -1,3 +1,19 @@
+#!/bin/bash
+
+# Bulk upload of the dash functions
+# in the VM:
+#   - run './_upload_from_gh.sh' to upload the updated functions from GitHub. 
+#   - after what, remember to update the app.py with the appropriate app name:
+#   """
+#   app = dash.Dash(
+#     __name__,
+#     requests_pathname_prefix='/dash/',
+#     routes_pathname_prefix='/dash/'
+#   )
+#   """
+#   - set `web = False`
+
+
 import dash
 from dash import dcc, html, Input, Output, State
 import plotly.graph_objects as go
