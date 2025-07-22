@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Bulk upload of the dash functions
 # in the VM:
 #   - run './_upload_from_gh.sh' to upload the updated functions from GitHub. 
@@ -18,7 +16,7 @@ import dash
 from dash import dcc, html, Input, Output, State
 import plotly.graph_objects as go
 import re
-import pandas as pd
+# import pandas as pd
 import folium
 from folium.plugins import MarkerCluster
 from shapely.geometry import MultiPoint
@@ -43,24 +41,30 @@ app = dash.Dash(
     routes_pathname_prefix='/dash/',
     suppress_callback_exceptions=True
 )
-# if local:
-#     # app = dash.Dash(__name__)
-#     app = dash.Dash(
-#         __name__,
-#         requests_pathname_prefix='/dash/',
-#         routes_pathname_prefix='/dash/',
-#         suppress_callback_exceptions=True
-#     )
 
-# if web:
-#     app = dash.Dash(
-#         __name__,
-#         requests_pathname_prefix='/dash/',
-#         routes_pathname_prefix='/dash/'
-#     )
+app.index_string = '''
+<!DOCTYPE html>
+<html>
+    <head>
+        {%metas%}
+        <title>{%title%}</title>
+        <link rel="icon" type="image/png" href="/assets/logo.png">
+        {%favicon%}
+        {%css%}
+    </head>
+    <body>
+        {%app_entry%}
+        <footer>
+            {%config%}
+            {%scripts%}
+            {%renderer%}
+        </footer>
+    </body>
+</html>
+'''
 
 app.title = tit
-app._favicon = ("logo.ico")
+# app._favicon = ("logo.ico")
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     html.Div(id='page-content')
@@ -98,7 +102,12 @@ def generate_map_view(slug):
 def generate_all_datasets_map():
     m = folium.Map(location=[45, 5], zoom_start=5)
     
-    colors = ['red', 'blue', 'green', 'purple', 'orange', 'darkred', 'lightblue']
+    colors = [
+    'red', 'blue', 'green', 'purple', 'orange', 'darkred', 'lightblue',
+    'darkblue', 'lightgreen', 'cadetblue', 'darkgreen', 'lightred',
+    'black', 'gray', 'pink', 'lightgray', 'beige', 'brown', 'darkpurple',
+    'lightgray', 'yellow', 'lightyellow', 'navy', 'teal', 'aqua', 'gold',
+    'coral']
     
     for idx, slug in enumerate(dataset_slugs):
         try:
@@ -145,18 +154,16 @@ def display_page(pathname, search):
     # Remove '/dash/' prefix to isolate the slug
     path = pathname.replace('/dash/', '').strip('/')
 
-    # if path == "" or path == "index":
-    #     slug = search.split('=')[-1]
-    #     return html.Div([
-    #         html.H2("Welcome to CHIPS Dashboard"),
-    #         html.P("Please select a dataset from the sidebar."),
-    #         html.P(f"xxxxxxxxx {search}")
-    #     ])
     if path == "" or path == "index":
         return html.Div(style={'display': 'flex'}, children=[
-            html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
+                html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
                 html.H2("Welcome"),
-                html.P("This dashboard helps explore datasets."),
+                html.P([
+                        "This dashboard helps explore the CHIPS database. See also: ",
+                        html.A("GitHub", 
+                               href="https://github.com/iramat/iramat-dev/tree/main/dbs/chips",
+                               target="_blank")
+                    ]),
                 html.H3("Datasets"),
                 html.Ul([
                     html.Li(html.A(slug, href=f"/dash/mapview?dataset={slug}")) for slug in dataset_slugs
@@ -164,6 +171,44 @@ def display_page(pathname, search):
             ]),
             html.Div(style={'flex': '1', 'padding': '20px'}, children=[
                 generate_all_datasets_map()
+            ])
+        ])
+
+    elif path in dataset_map:
+        slug = path
+        return html.Div(style={'display': 'flex'}, children=[
+            html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
+                html.H2("Dataset Navigation"),
+                html.Ul([
+                    html.Li(html.A("🏠 Back to Home", href="/dash/")),
+                    html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
+                    html.Hr(),
+                    *[
+                        html.Li(html.A(s, href=f"/dash/{s}")) for s in dataset_slugs
+                    ]
+                ])
+            ]),
+            html.Div(style={'flex': '1', 'padding': '20px'}, children=[
+                generate_dataset_page(dataset_map[slug])
+            ])
+        ])
+    # if path in dataset_map:
+        slug = search.split('=')[-1]
+        return html.Div(style={'display': 'flex'}, children=[
+            html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
+                html.H2("Dataset Navigation"),
+                html.Ul([
+                    html.Li(html.A("🏠 Back to Home", href="/dash/")),
+                    html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
+                    html.Hr(),
+                    *[
+                        html.Li(html.A(s, href=f"/dash/{s}")) for s in dataset_slugs
+                    ]
+                ])
+            ]),
+            html.Div(style={'flex': '1', 'padding': '20px'}, children=[
+                # generate_dataset_page(dataset_map[slug])
+                generate_dataset_page(dataset_map[path])
             ])
         ])
 
@@ -186,6 +231,7 @@ def display_page(pathname, search):
                 generate_map_view(slug)
             ])
         ])
+
 
     if path == "dataset" and search:
         slug = search.split('=')[-1]
@@ -243,145 +289,7 @@ def display_page(pathname, search):
                 generate_dataset_page(dataset_map[slug])
             ])
         ])
-    # if path in dataset_map:
-        slug = search.split('=')[-1]
-        return html.Div(style={'display': 'flex'}, children=[
-            html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
-                html.H2("Dataset Navigation"),
-                html.Ul([
-                    html.Li(html.A("🏠 Back to Home", href="/dash/")),
-                    html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
-                    html.Hr(),
-                    *[
-                        html.Li(html.A(s, href=f"/dash/{s}")) for s in dataset_slugs
-                    ]
-                ])
-            ]),
-            html.Div(style={'flex': '1', 'padding': '20px'}, children=[
-                # generate_dataset_page(dataset_map[slug])
-                generate_dataset_page(dataset_map[path])
-            ])
-        ])
-
-
-    if path == "mapview" and search:
-        slug = search.split('=')[-1]
-        return html.Div(style={'display': 'flex'}, children=[
-            html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
-                html.H2("Dataset List (Map View)"),
-                html.Ul([
-                    html.Li(html.A("🏠 Back to Home", href="/dash/")),
-                    html.Li(html.A("📈 View Line Chart", href=f"/dash/{slug}")),
-                    html.Hr(),
-                    *[
-                        html.Li(html.A(s, href=f"/dash/mapview?dataset={s}"))
-                        for s in dataset_slugs
-                    ]
-                ])
-            ]),
-            html.Div(style={'flex': '1', 'padding': '20px'}, children=[
-                generate_map_view(slug)
-            ])
-        ])
-
-    if path == "dataset" and search:
-        slug = search.split('=')[-1]
-        return html.Div(style={'display': 'flex'}, children=[
-            html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
-                html.H2("Dataset Navigation"),
-                html.Ul([
-                    html.Li(html.A("🏠 Back to Home", href="/dash/")),
-                    html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
-                    html.Hr(),
-                    *[
-                        html.Li(html.A(s, href=f"/dash/{s}")) for s in dataset_slugs
-                    ]
-                ])
-            ]),
-            html.Div(style={'flex': '1', 'padding': '20px'}, children=[
-                generate_dataset_page(dataset_map[slug])
-            ])
-        ])
-    #     slug = search.split('=')[-1]
-    #     return html.Div(style={'display': 'flex'}, children=[
-    #         html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
-    #             html.Li(html.A("🏠 Back to Home", href="/dash/")),
-    #             html.Li(html.A("📈 View Line Chart", href=f"/dash/{slug}")),
-    #             html.H2("Dataset List (Map View)"),
-    #             html.Ul([
-    #                 html.Li(html.A(slug, href=f"/dash/mapview?dataset={slug}")) for slug in dataset_slugs
-    #             ])
-    #         ]),
-    #         html.Div(style={'flex': '1', 'padding': '20px'}, children=[
-    #             generate_map_view(slug)
-    #         ])
-    #     ])
-
-    elif path in dataset_map:
-        slug = path
-        return html.Div(style={'display': 'flex'}, children=[
-            html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
-                html.H2("Dataset Navigation"),
-                html.Ul([
-                    html.Li(html.A("🏠 Back to Home", href="/dash/")),
-                    html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
-                    html.Hr(),
-                    *[
-                        html.Li(html.A(s, href=f"/dash/{s}")) for s in dataset_slugs
-                    ]
-                ])
-            ]),
-            html.Div(style={'flex': '1', 'padding': '20px'}, children=[
-                generate_dataset_page(dataset_map[slug])
-            ])
-        ])
-    # # if path in dataset_map:
-    #     return html.Div(style={'display': 'flex'}, children=[
-    #         html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
-    #             html.H2("Dataset Navigation"),
-    #             html.Ul([
-    #                 html.Li(html.A("🏠 Back to Home", href="/dash/")),
-    #                 html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
-    #                 html.Hr(),
-    #                 *[
-    #                     html.Li(html.A(s, href=f"/dash/{s}")) for s in dataset_slugs
-    #                 ]
-    #             ])
-    #         ]),
-    #         html.Div(style={'flex': '1', 'padding': '20px'}, children=[
-    #             generate_dataset_page(dataset_map[slug])
-    #         ])
-    #     ])
-
-    # if path in dataset_map:
-    #     return generate_dataset_page(dataset_map[path])
-
-# @app.callback(
-#     Output('page-content', 'children'),
-#     Input('url', 'pathname'),
-#     State('url', 'search')
-# )
-# def display_page(pathname, search):
-#     # slug = pathname.strip("/").split("/")[-1] if local else pathname.rsplit("/", 1)[-1]
-#     if pathname in ["/", "/dash/"]:
-#     	return html.Div([
-#         	html.H2("Welcome to CHIPS Dashboard"),
-#         	html.P("Select a dataset from the sidebar to begin.")
-#     	])
-#     slug = pathname.strip("/") if local else pathname.rsplit("/", 1)[-1]
-#     if slug == "mapview" and search:
-#         slug_param = search.split('=')[-1]
-#         return html.Div(style={'display': 'flex'}, children=[
-#             html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
-#                 html.H2("Dataset List"),
-#                 html.Ul([
-#                     html.Li(html.A(slug, href=f"/dash/mapview?dataset={slug}")) for slug in dataset_slugs
-#                 ])
-#             ]),
-#             html.Div(style={'flex': '1', 'padding': '20px'}, children=[
-#                 generate_map_view(slug_param)
-#             ])
-#         ])
+ 
 
     elif path in dataset_map:
         slug = path
@@ -407,18 +315,11 @@ def display_page(pathname, search):
         html.P(f"No dataset or route found for: {pathname}")
     ])
 
-#         return generate_dataset_page(dataset_map[slug])
-#     else:
-#         return html.Div([
-#             html.H2("404 - Page not found"),
-#             html.P("Invalid dataset slug in URL.")
-#         ])
-
 def create_figure(dataset_url, log10=True, selected_sites=None):
     result = get_data(dataset_url, df["url_reference"], log10=log10)
     df_elt = result["elements"]
     df_data = result["data"]
-    df_data['label'] = df_data['site_name'] + " - " + df_data['sample_name']
+    df_data['label'] = '<b>' + df_data['site_name'] + '</b>' + " - " + df_data['sample_name']
 
     # HTML-safe reference string
     refbib = html.A(df_data.at[0, 'reference'], href=df_data.at[0, 'url'], target='_blank')
@@ -477,20 +378,6 @@ def generate_dataset_page(dataset_url):
     dataset_name = re.search(r'[^/]+$', dataset_url).group()
     return html.Div(style={'display': 'flex', 'height': '100vh'}, children=[
 
-        # # Sidebar: Dataset List
-        # html.Div(style={
-        #     'width': '200px',
-        #     'padding': '20px',
-        #     'backgroundColor': '#f2f2f2',
-        #     'overflowY': 'auto'
-        # }, children=[
-        #     html.H2("Datasets"),
-        #     html.Ul([
-        #         # html.Li(html.A(slug, href=f"/dash/{slug}")) if web else html.Li(html.A(slug, href=f"/{slug}"))
-        #         html.Li(html.A(slug, href=f"/dash/{slug}")) for slug in dataset_slugs
-        #     ])
-        # ]),
-
         # Sidebar: Site Checklist
         html.Div(style={
             'width': '300px',
@@ -547,23 +434,6 @@ def generate_dataset_page(dataset_url):
         ])
     ])
 
-
-# ----------- CALLBACKS ---------------- #
-
-# @app.callback(
-#     Output('page-content', 'children'),
-#     Input('url', 'pathname')
-# )
-# def display_page(pathname):
-#     slug = pathname.strip("/") if local else pathname.rsplit("/", 1)[-1]
-#     if slug in dataset_map:
-#         return generate_dataset_page(dataset_map[slug])
-#     else:
-#         return html.Div([
-#             html.H2("404 - Page not found"),
-#             html.P("Invalid dataset slug in URL.")
-#         ])
-
 @app.callback(
     Output('dataset-graph', 'figure'),
     Output('reference-info', 'children'),
@@ -576,32 +446,6 @@ def update_graph(scale_mode, dataset_url, selected_sites):
     fig, ref_html = create_figure(dataset_url, log10=log10, selected_sites=selected_sites)
     return fig, ref_html
 
-# @app.callback(
-#     Output('site-filter', 'options'),
-#     Output('site-filter', 'value'),
-#     Input('current-dataset-url', 'data'),
-#     Input('select-all-sites', 'n_clicks'),
-#     Input('unselect-all-sites', 'n_clicks'),
-#     prevent_initial_call=True
-# )
-# def update_site_filter(dataset_url, select_clicks, unselect_clicks):
-#     ctx = dash.callback_context
-#     triggered_id = ctx.triggered[0]['prop_id'].split('.')[0] if ctx.triggered else None
-
-#     # Always refresh the options based on the current dataset
-#     result = get_data(dataset_url, df["url_reference"], log10=True)
-#     df_data = result["data"]
-#     site_names = df_data['site_name'].unique()
-#     options = [{'label': name, 'value': name} for name in site_names]
-
-#     if triggered_id == 'select-all-sites' or triggered_id == 'current-dataset-url':
-#         # Select all sites (either by explicit click or when new dataset is loaded)
-#         return options, list(site_names)
-#     elif triggered_id == 'unselect-all-sites':
-#         return options, []
-#     else:
-#         raise dash.exceptions.PreventUpdate
-
 @app.callback(
     Output('site-filter', 'options'),
     Output('site-filter', 'value'),
@@ -610,22 +454,6 @@ def update_graph(scale_mode, dataset_url, selected_sites):
     Input('unselect-all-sites', 'n_clicks')#,
     # prevent_initial_call=True
 )
-# def update_site_filter(dataset_url, select_clicks, unselect_clicks):
-#     ctx = dash.callback_context
-#     triggered_id = ctx.triggered[0]['prop_id'].split('.')[0] if ctx.triggered else None
-
-#     # Always refresh the options based on the current dataset
-#     result = get_data(dataset_url, df["url_reference"], log10=True)
-#     df_data = result["data"]
-#     site_names = sorted(df_data['site_name'].dropna().unique().tolist())
-#     options = [{'label': name, 'value': name} for name in site_names]
-
-#     if triggered_id in ('select-all-sites', 'current-dataset-url'):
-#         return options, site_names  # ✅ Select all
-#     elif triggered_id == 'unselect-all-sites':
-#         return options, []  # ✅ Deselect all
-#     else:
-#         raise dash.exceptions.PreventUpdate
 
 def update_site_filter(dataset_url, select_clicks, unselect_clicks):
     ctx = dash.callback_context
@@ -638,7 +466,7 @@ def update_site_filter(dataset_url, select_clicks, unselect_clicks):
 
     if triggered_id in ('select-all-sites', 'current-dataset-url'):
         return options, site_names
-    # elif triggered_id == 'unselect-all-sites':
+    elif triggered_id == 'unselect-all-sites':
         return options, []
     else:
         raise dash.exceptions.PreventUpdate
