@@ -11,7 +11,7 @@
 #   """
 #   - set `web = False`
 
-
+import os
 import dash
 from dash import dcc, html, Input, Output, State
 import plotly.graph_objects as go
@@ -24,6 +24,7 @@ import geopandas as gpd
 from get_data import get_data
 from urls import read_data_urls
 
+# assets_path = os.path.join(os.path.dirname(__file__), 'assets')
 
 # web = False
 # local = not web
@@ -37,6 +38,7 @@ dataset_map = dict(zip(dataset_slugs, df['url_data']))
 # # Initialize app
 app = dash.Dash(
     __name__,
+    # assets_folder=assets_path,
     requests_pathname_prefix='/dash/',
     routes_pathname_prefix='/dash/',
     suppress_callback_exceptions=True
@@ -48,8 +50,7 @@ app.index_string = '''
     <head>
         {%metas%}
         <title>{%title%}</title>
-        <link rel="icon" type="image/png" href="/assets/logo.png">
-        {%favicon%}
+        <link rel="icon" type="image/png" href="/dash/assets/logo.png">
         {%css%}
     </head>
     <body>
@@ -64,7 +65,7 @@ app.index_string = '''
 '''
 
 app.title = tit
-# app._favicon = ("logo.ico")
+# app.favicon = ("logo.ico")
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     html.Div(id='page-content')
@@ -159,7 +160,7 @@ def display_page(pathname, search):
                 html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
                 html.H2("Welcome"),
                 html.P([
-                        "This dashboard helps explore the CHIPS database. See also: ",
+                        "This dashboard helps exploring the CHIPS database. See also: ",
                         html.A("GitHub", 
                                href="https://github.com/iramat/iramat-dev/tree/main/dbs/chips",
                                target="_blank")
