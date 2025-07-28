@@ -37,7 +37,7 @@ def generate_map_view(df, slug, dataset_map = None, ):
     map_html = m.get_root().render()
     return html.Iframe(srcDoc=map_html, width='100%', height='600')
 
-def generate_all_datasets_map(dataset_map = None, dataset_slugs = None):
+def generate_all_datasets_map(df = None, dataset_map = None, dataset_slugs = None):
     m = folium.Map(location=[45, 5], zoom_start=5)
     
     colors = [
