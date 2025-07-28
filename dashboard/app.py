@@ -174,7 +174,7 @@ def display_page(pathname, search):
                 ])
             ]),
             html.Div(style={'flex': '1', 'padding': '20px'}, children=[
-                generate_all_datasets_map(dataset_map = dataset_map)
+                generate_all_datasets_map(dataset_map = dataset_map, dataset_slugs = dataset_slugs)
             ])
         ])
 
