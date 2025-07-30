@@ -1,10 +1,7 @@
 import dash
 from dash import dcc, html
-import plotly.express as px
 import plotly.graph_objects as go
-import pandas as pd
-import numpy as np
-import requests
+#from spider_charts import api_pg_dataset_radarplot
 from charts import api_pg_dataset_linechart
 
 # Fetch data once for this example (could be dynamic)
@@ -12,8 +9,9 @@ urls = {
     "dataset": "http://157.136.252.188:3000/dataset_adisser17",
     "reference": "http://157.136.252.188:3000/ref_elements"
 }
-result = api_pg_dataset_linechart(urls["dataset"], urls["reference"], log10=True)
-df_log = result["elements"]
+result_line = api_pg_dataset_linechart(urls["dataset"], urls["reference"], log10=True, order_atom_num=False)
+#result = api_pg_dataset_radarplot(urls["dataset"], urls["reference"], order_atom_num=False)
+df_log = result_line["elements"]
 
 # Create the Dash app
 # app = dash.Dash(__name__)
@@ -31,7 +29,7 @@ for idx, row in df_log.iterrows():
         name=str(idx)
     ))
 
-fig.update_layout(title="dataset_adisser17",
+fig.update_layout(title="dataset_adisser",
                   xaxis_title="Element",
                   yaxis_title="Log10 Value")
 
