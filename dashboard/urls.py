@@ -1,6 +1,6 @@
 def read_data_urls(root_data_url="https://raw.githubusercontent.com/iramat/iramat-dev/refs/heads/main/dbs/chips/urls_data.tsv", reference="http://157.136.252.188:3000/ref_elements", read_ref=False):
     """
-    Read a GitHub dataset and retrieve URLs and values
+    Read a GitHub dataset (TSV file) and retrieve URLs, values and other infos
 
     >>> df = read_data_urls(read_ref=False)
     >>> print(df['url_data'])
