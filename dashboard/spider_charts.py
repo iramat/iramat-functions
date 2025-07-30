@@ -29,7 +29,7 @@ def api_pg_dataset_radarplot(url_dataset, url_reference_elements, order_atom_num
         raise ValueError(f"Colonne '{normalize_by}' absente")
 
     # ref_column = ref["symbole"].str.lower().tolist()
-    ref_column = ['na', 'mg', 'al', 'si', 'p', 'k', 'ca', 'mn']
+    ref_column = ['na', 'mg', 'al', 'si', 'p', 'k', 'ca', 'mn', 'fe']
 
     if order_atom_num:
         ordered_df = df[[col for col in ref_column if col in df.columns]]
