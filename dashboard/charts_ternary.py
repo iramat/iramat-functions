@@ -8,11 +8,16 @@ Created on Tue Aug  5 11:01:28 2025
 import pandas as pd
 import ternary
 import plotly_express as px
+import plotly.io as pio
+from urls import read_data_urls
+from get_data import get_data
 
+dt = read_data_urls(read_ref=False)
 
-# === 1. Chemin du fichier à modifier si besoin ===
-input_file = "SlagOreLorraineAnalyses.csv"
-output_file = "Oxydes_convertis.csv"
+a_dataset = dt['url_data'][1] 
+
+data = get_data(a_dataset, dt['url_reference'], log10=False)
+df = data['data']
 
 # === 2. Coefficients de conversion Élément → Oxyde ===
 conversion_factors = {
@@ -27,8 +32,7 @@ conversion_factors = {
     'Fe': ('FeO', 1.287)
 }
 
-# === 3. Chargement du fichier CSV avec le bon séparateur ===
-df = pd.read_csv (input_file, delimiter = ';')
+
 
 # === 4. Sélection et conversion des colonnes cibles ===
 element_cols = list(conversion_factors.keys())
@@ -78,9 +82,11 @@ tax.get_axes().axis('off')
 # tax.show()
 
 # Alternative plotly
+
+pio.renderers.default = 'browser'  # Ouvre dans le navigateur par défaut
 Fig_plotly = px.scatter_ternary(merged_df,
                    a="FeO", b="SiO2", c="Al2O3",
-                   color="Site"
+                   color="site_name"
                    )
 
 Fig_plotly.show()
