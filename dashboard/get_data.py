@@ -8,14 +8,17 @@ def safe_log10(x):
         return np.nan
     
 def get_data(url_dataset, url_reference_elements, log10=True):
+    # to run after urls.read_data_urls()
     import pandas as pd
     import requests
     import numpy as np
 
+    # references
     response_ref = requests.get(url_reference_elements)
     ref_elements = response_ref.json()
     ref = pd.DataFrame(ref_elements)
 
+    # data
     response_data = requests.get(url_dataset)
     data = response_data.json()
     df = pd.DataFrame(data)
