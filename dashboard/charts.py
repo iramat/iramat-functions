@@ -37,6 +37,9 @@ def api_pg_dataset_linechart(url_dataset, url_reference_elements, log10=True):
     }
     
 def api_pg_dataset_ternary(df=None):
+    ##########################################################
+    # This function has to be integrated into app.py         #
+    ##########################################################
     """
     Create a ternary plot from a dataset
 

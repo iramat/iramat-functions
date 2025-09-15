@@ -40,12 +40,21 @@ def generate_map_view(df, slug, dataset_map = None, ):
 def generate_all_datasets_map(df = None, dataset_map = None, dataset_slugs = None):
     m = folium.Map(location=[45, 5], zoom_start=5)
     
-    colors = [
-    'red', 'blue', 'green', 'purple', 'orange', 'darkred', 'lightblue',
-    'darkblue', 'lightgreen', 'cadetblue', 'darkgreen', 'lightred',
-    'black', 'gray', 'pink', 'lightgray', 'beige', 'brown', 'darkpurple',
-    'lightgray', 'yellow', 'lightyellow', 'navy', 'teal', 'aqua', 'gold',
-    'coral']
+    import matplotlib.pyplot as plt
+    import matplotlib.colors as mcolors
+
+    # colors = [
+    # 'red', 'blue', 'green', 'purple', 'orange', 'darkred', 'lightblue',
+    # 'darkblue', 'lightgreen', 'cadetblue', 'darkgreen', 'lightred',
+    # 'black', 'gray', 'pink', 'lightgray', 'beige', 'brown', 'darkpurple',
+    # 'lightgray', 'yellow', 'lightyellow', 'navy', 'teal', 'aqua', 'gold',
+    # 'coral']
+    
+    # cmap = plt.get_cmap('tab20')  # or 'Set3', 'Dark2', etc.
+    # colors = [mcolors.to_hex(cmap(i / len(dataset_slugs))) for i in range(len(dataset_slugs))]
+    cmap = plt.get_cmap('hsv')  # Good hue variety for many categories
+    colors = [mcolors.to_hex(cmap(i / len(dataset_slugs))) for i in range(len(dataset_slugs))]
+    print(colors)
     
     for idx, slug in enumerate(dataset_slugs):
         try:
@@ -55,6 +64,7 @@ def generate_all_datasets_map(df = None, dataset_map = None, dataset_slugs = Non
 
             points = list(zip(df_data['longitude'], df_data['latitude']))
             if len(points) >= 3:
+                # print(colors[idx % len(colors)])
                 multipoint = MultiPoint(points)
                 hull = multipoint.convex_hull
                 geojson = gpd.GeoSeries([hull]).__geo_interface__

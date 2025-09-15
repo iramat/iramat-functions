@@ -3,6 +3,8 @@ def db_connect(pg_creds = 'C:/Users/TH282424/Rprojects/iramat-test/credentials/p
   Connect a database connection (engine)
 
   :param pg_creds: my PG credentials (local)
+  
+  >>> engine = db_connect("pg_credentials.json") 
   """
   from sqlalchemy import create_engine
   import json
@@ -99,6 +101,53 @@ def db_refbib(table = "instrument_incertitude", engine=None, output_format = "JS
     bibref = first_bib.text.render_as("text")
     return(bibref)
     # return(list(formatted_entries))
+
+def db_edtf_maj(engine = None):
+  """
+  Update the edtf field from 'date_debut', 'date_fin', and 'doute_date' fields from the 'sites' table
+
+  :param engine: a sqlalchemy.engine
+  """
+  from sqlalchemy import create_engine, text
+  
+  with engine.begin() as conn:  # begin() ensures commit
+    conn.execute(text("""
+        ALTER TABLE sites
+        ADD COLUMN IF NOT EXISTS edtf text;
+    """))
+    result = conn.execute(text("""
+        SELECT id_site, date_debut, date_fin, doute_date FROM sites;
+    """))
+    rows = result.fetchall()
+
+    # update each row
+    for site_id, date_debut, date_fin, doute_date in rows:
+        edtf_val = db_edtf_build_edtf(date_debut, date_fin, doute_date)
+        conn.execute(
+            text("UPDATE sites SET edtf = :edtf WHERE id_site = :id"),
+            {"edtf": edtf_val, "id": site_id}
+        )
+
+# import psycopg2
+# import pandas as pd
+
+def db_edtf_format_year(year: int | None) -> str | None:
+    """Format integer year to EDTF padded string, or None if missing."""
+    if year is None:
+        return None
+    if year < 0:
+        return f"{year:05d}"   # e.g. -25 -> -0025
+    else:
+        return f"{year:04d}"   # e.g. 450 -> 0450
+
+def db_edtf_build_edtf(start: int | None, end: int | None, doute: bool | None) -> str | None:
+    """Construct EDTF interval string with ~ and optional ?."""
+    if start is None or end is None:
+        return None
+    start_str = db_edtf_format_year(start)
+    end_str = db_edtf_format_year(end)
+    suffix = "~" if doute is False else "?~"
+    return f"{start_str}{suffix}/{end_str}{suffix}"
 
 def py_tempfile(response=None, module_name = "bdd"):
   """

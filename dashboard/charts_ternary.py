@@ -5,6 +5,10 @@ Created on Tue Aug  5 11:01:28 2025
 @author: adisser
 """
 
+##########################################################
+# This script has already been integrated into charts.py #
+##########################################################
+
 import pandas as pd
 import ternary
 import plotly_express as px
@@ -13,9 +17,7 @@ from urls import read_data_urls
 from get_data import get_data
 
 dt = read_data_urls(read_ref=False)
-
 a_dataset = dt['url_data'][1] 
-
 data = get_data(a_dataset, dt['url_reference'], log10=False)
 df = data['data']
 
