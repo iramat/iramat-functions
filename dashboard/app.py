@@ -82,16 +82,32 @@ app.layout = html.Div([
 def display_page(pathname, search):
     # Remove '/dash/' prefix to isolate the slug
     path = pathname.replace('/dash/', '').strip('/')
-
+    
     if path == "" or path == "index":
         return html.Div(style={'display': 'flex'}, children=[
                 html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
                 html.H2("Welcome"),
                 html.P([
-                        "This dashboard helps exploring the CHIPS database. See also: ",
-                        html.A("GitHub", 
-                               href="https://github.com/iramat/iramat-dev/tree/main/dbs/chips",
-                               target="_blank")
+                        "This dashboard helps Exploring The CHIPS Database. See also ",
+                        # html.A("GitHub", 
+                        #        href="https://github.com/iramat/chips",
+                        #        target="_blank")
+                        html.A(
+                            children=[
+                                html.Img(
+                                    src="/dash/assets/app-github.png",
+                                    style={
+                                        "height": "25px",
+                                        "verticalAlign": "middle",
+                                        "marginRight": "5px"
+                                    }
+                                ),
+                                ""
+                            ],
+                            href="https://github.com/iramat/chips",
+                            target="_blank",
+                            style={"textDecoration": "none", "color": "black"}
+                        )
                     ]),
                 html.H3("Datasets"),
                 html.Ul([
@@ -102,6 +118,26 @@ def display_page(pathname, search):
                 generate_all_datasets_map(df = df, dataset_map = dataset_map, dataset_slugs = dataset_slugs)
             ])
         ])
+
+    # if path == "" or path == "index":
+    #     return html.Div(style={'display': 'flex'}, children=[
+    #             html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
+    #             html.H2("Welcome"),
+    #             html.P([
+    #                     "This dashboard helps exploring the CHIPS database. See also: ",
+    #                     html.A("GitHub", 
+    #                            href="https://github.com/iramat/iramat-dev/tree/main/dbs/chips",
+    #                            target="_blank")
+    #                 ]),
+    #             html.H3("Datasets"),
+    #             html.Ul([
+    #                 html.Li(html.A(slug, href=f"/dash/mapview?dataset={slug}")) for slug in dataset_slugs
+    #             ])
+    #         ]),
+    #         html.Div(style={'flex': '1', 'padding': '20px'}, children=[
+    #             generate_all_datasets_map(df = df, dataset_map = dataset_map, dataset_slugs = dataset_slugs)
+    #         ])
+    #     ])
 
     if path == "mapview" and search:
         slug = search.split('=')[-1]
@@ -125,13 +161,14 @@ def display_page(pathname, search):
 
 
     if path == "dataset" and search:
+        # Useful? seems never accessed...
         slug = search.split('=')[-1]
         return html.Div(style={'display': 'flex'}, children=[
             html.Div(style={'width': '200px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
                 html.H1(tit),
                 html.H2("Dataset List"),
                 html.Ul([
-                    html.Li(html.A("🏠 Back to Home", href="/dash/")),
+                    html.Li(html.A("🏠 Back to HOME", href="/dash/")),
                     html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
                     html.Hr(),
                     *[
@@ -182,24 +219,48 @@ def display_page(pathname, search):
     #     ])
  
 
+    # elif path in dataset_map:
+    #     slug = path
+    #     return html.Div(style={'display': 'flex'}, children=[
+    #         html.Div(style={'width': '200px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
+    #             html.H2("Dataset List"),
+    #             html.Ul([
+    #                 html.Li(html.A("🏠 Back to HoMe", href="/dash/")),
+    #                 html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
+    #                 html.Hr(),
+    #                 *[
+    #                     html.Li(html.A(s, href=f"/dash/{s}")) for s in dataset_slugs
+    #                 ]
+    #             ])
+    #         ]),
+    #         html.Div(style={'flex': '1', 'padding': '20px'}, children=[
+    #             generate_dataset_page(dataset_map[slug])
+    #         ])
+    #     ])
+    
     elif path in dataset_map:
+        # Chart view
         slug = path
-        return html.Div(style={'display': 'flex'}, children=[
-            html.Div(style={'width': '200px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
-                html.H2("Dataset List"),
-                html.Ul([
-                    html.Li(html.A("🏠 Back to Home", href="/dash/")),
-                    html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
-                    html.Hr(),
-                    *[
-                        html.Li(html.A(s, href=f"/dash/{s}")) for s in dataset_slugs
+        return html.Div(
+            style={'flex': '1', 'padding': '20px'},
+            children=[
+                html.Div(
+                    # style={
+                    #     'backgroundColor': '#f2f2f2',  # light grey background
+                    #     'padding': '10px',
+                    #     'borderRadius': '5px',
+                    #     'marginBottom': '15px'
+                    # },
+                    children=[
+                        html.Ul([
+                            html.Li(html.A("🏠 Back to HoMe", href="/dash/")),
+                            html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}"))
+                        ])
                     ]
-                ])
-            ]),
-            html.Div(style={'flex': '1', 'padding': '20px'}, children=[
+                ),
                 generate_dataset_page(dataset_map[slug])
-            ])
-        ])
+            ]
+        )
     else:
         return html.Div([
         html.H2("404 - Page not found"),
@@ -273,7 +334,7 @@ def generate_dataset_page(dataset_url):
         html.Div(style={
             'width': '300px',
             'padding': '20px',
-            'backgroundColor': '#e6e6e6',
+            'backgroundColor': '#f2f2f2',
             'overflowY': 'auto'
         }, children=[
             html.H3("Filter by Site"),
@@ -365,4 +426,5 @@ def update_site_filter(dataset_url, select_clicks, unselect_clicks):
 # ----------- RUN SERVER ---------------- #
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=8050)
+    # app.run(debug=True, host='0.0.0.0', port=8050)
+    app.run(debug=True, host="127.0.0.1", port=8051)

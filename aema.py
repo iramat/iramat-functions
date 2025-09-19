@@ -1,5 +1,5 @@
 def collect_vocab(vocabs = None, root_url = 'https://aema.huma-num.fr/back/public/api/'):
-# === 2. Fetch data ===
+    """Collect reference data (controlled vocabularies) from the AeMA API"""
     import pandas as pd
     import requests
 
@@ -18,6 +18,7 @@ def collect_vocab(vocabs = None, root_url = 'https://aema.huma-num.fr/back/publi
             dfs.append(pd.DataFrame())
     return(dfs)
 
+
 def create_bulkupload(output_path="aeamena_data.xlsx", root_url = 'https://aema.huma-num.fr/back/public/api/', vocabs = [
         "ateliers", "objettypes", "collections", "communes", "contextes", "denominations",
         "mesuretypes", "emetteurs", "fonctions", "depots", "matieres", "observations",
@@ -25,61 +26,54 @@ def create_bulkupload(output_path="aeamena_data.xlsx", root_url = 'https://aema.
         "types", "descriptiftypes", "localisationtypes", "zones"
     ]
 ):
-    """Fetches AeMA vocabs data, writes them to Excel sheets, and adds dropdowns in a summary sheet."""
-    # TODO: transpose rows and columns in the Summary sheet
+    """Fetch AeMA vocabs data, write them to Excel sheets, and add dropdowns in a transposed Summary sheet."""
 
     import pandas as pd
     from openpyxl import load_workbook
     from openpyxl.worksheet.datavalidation import DataValidation    
 
-    dfs=collect_vocab(vocabs=vocabs, root_url=root_url)
+    dfs = collect_vocab(vocabs=vocabs, root_url=root_url)
 
-    # # === 2. Fetch data ===
-    # dfs = []
-    # for vocab in vocabs:
-    #     url = f"{root_url}{vocab}"
-    #     try:
-    #         response = requests.get(url)
-    #         response.raise_for_status()
-    #         data = response.json()
-    #         for item in data:
-    #             item.pop('id', None)
-    #         dfs.append(pd.DataFrame(data))
-    #     except Exception as e:
-    #         print(f"Error fetching {vocab}: {e}")
-    #         dfs.append(pd.DataFrame())
-
-    # === 3. Create summary sheet ===
+    # === 3. Build transposed summary ===
     summary_rows = [
-        {"sheet": sheet_name, "column": col}
+        (sheet_name, col)
         for sheet_name, df in zip(vocabs, dfs)
         for col in df.columns
     ]
-    summary_df = pd.DataFrame(summary_rows)
+    # Two header rows: sheets and columns
+    summary_data = {
+        i: [sheet, col] for i, (sheet, col) in enumerate(summary_rows, start=1)
+    }
+    summary_df = pd.DataFrame(summary_data).T
+    summary_df.columns = None  # no column labels
+    summary_df = summary_df.T  # so rows are: first row sheets, second row columns
 
     # === 4. Write to Excel ===
     with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
-        summary_df.to_excel(writer, sheet_name='Summary', index=False)
+        summary_df.to_excel(writer, sheet_name='Summary', header=False, index=False)
         for name, df in zip(vocabs, dfs):
             df.to_excel(writer, sheet_name=name, index=False)
 
     # === 5. Add dropdowns ===
     wb = load_workbook(output_path)
     summary_ws = wb["Summary"]
-    dropdown_col_idx = 3
-    summary_ws.cell(row=1, column=dropdown_col_idx, value="Dropdown")
 
-    for i, row in enumerate(summary_ws.iter_rows(min_row=2, max_row=summary_ws.max_row, max_col=2), start=2):
-        sheet_name, column_name = row[0].value, row[1].value
+    # loop over all columns, apply dropdowns starting row 3
+    for col_idx in range(1, summary_ws.max_column + 1):
+        sheet_name = summary_ws.cell(row=1, column=col_idx).value
+        column_name = summary_ws.cell(row=2, column=col_idx).value
         if sheet_name in wb.sheetnames:
             sheet = wb[sheet_name]
             header = [cell.value for cell in sheet[1]]
             if column_name in header:
-                col_idx = header.index(column_name) + 1
-                col_data = list(sheet.iter_cols(min_col=col_idx, max_col=col_idx, min_row=2, values_only=True))[0]
+                col_idx_sheet = header.index(column_name) + 1
+                col_data = list(sheet.iter_cols(min_col=col_idx_sheet,
+                                                max_col=col_idx_sheet,
+                                                min_row=2,
+                                                values_only=True))[0]
                 values = list(dict.fromkeys([str(v) for v in col_data if v]))
 
-                # Build a dropdown list without exceeding Excel's formula limit
+                # join values into a single string under Excel limit
                 joined = ""
                 for value in values:
                     if len(joined) + len(value) + 1 <= 254:
@@ -91,12 +85,80 @@ def create_bulkupload(output_path="aeamena_data.xlsx", root_url = 'https://aema.
                     dropdown_formula = f'"{joined}"'
                     dv = DataValidation(type="list", formula1=dropdown_formula, showDropDown=False)
                     summary_ws.add_data_validation(dv)
-                    dv.add(summary_ws.cell(row=i, column=dropdown_col_idx))
+
+                    # Apply to all rows starting from row 3
+                    for row in range(3, summary_ws.max_row + 1000):  # arbitrary limit
+                        dv.add(summary_ws.cell(row=row, column=col_idx))
 
     # === 6. Move Summary to first sheet and save ===
     wb._sheets.insert(0, wb._sheets.pop(wb.sheetnames.index("Summary")))
     wb.save(output_path)
-    return(wb)
+    return wb
+
+# def create_bulkupload(output_path="aeamena_data.xlsx", root_url = 'https://aema.huma-num.fr/back/public/api/', vocabs = [
+#         "ateliers", "objettypes", "collections", "communes", "contextes", "denominations",
+#         "mesuretypes", "emetteurs", "fonctions", "depots", "matieres", "observations",
+#         "pays", "periodes", "series", "objetsoustypes", "techniques", "tresors",
+#         "types", "descriptiftypes", "localisationtypes", "zones"
+#     ]
+# ):
+#     """Fetches AeMA vocabs data, writes them to Excel sheets, and adds dropdowns in a summary sheet."""
+#     # TODO: transpose rows and columns in the Summary sheet
+
+#     import pandas as pd
+#     from openpyxl import load_workbook
+#     from openpyxl.worksheet.datavalidation import DataValidation    
+
+#     dfs=collect_vocab(vocabs=vocabs, root_url=root_url)
+
+#     # === 3. Create summary sheet ===
+#     summary_rows = [
+#         {"sheet": sheet_name, "column": col}
+#         for sheet_name, df in zip(vocabs, dfs)
+#         for col in df.columns
+#     ]
+#     summary_df = pd.DataFrame(summary_rows)
+
+#     # === 4. Write to Excel ===
+#     with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
+#         summary_df.to_excel(writer, sheet_name='Summary', index=False)
+#         for name, df in zip(vocabs, dfs):
+#             df.to_excel(writer, sheet_name=name, index=False)
+
+#     # === 5. Add dropdowns ===
+#     wb = load_workbook(output_path)
+#     summary_ws = wb["Summary"]
+#     dropdown_col_idx = 3
+#     summary_ws.cell(row=1, column=dropdown_col_idx, value="Dropdown")
+
+#     for i, row in enumerate(summary_ws.iter_rows(min_row=2, max_row=summary_ws.max_row, max_col=2), start=2):
+#         sheet_name, column_name = row[0].value, row[1].value
+#         if sheet_name in wb.sheetnames:
+#             sheet = wb[sheet_name]
+#             header = [cell.value for cell in sheet[1]]
+#             if column_name in header:
+#                 col_idx = header.index(column_name) + 1
+#                 col_data = list(sheet.iter_cols(min_col=col_idx, max_col=col_idx, min_row=2, values_only=True))[0]
+#                 values = list(dict.fromkeys([str(v) for v in col_data if v]))
+
+#                 # Build a dropdown list without exceeding Excel's formula limit
+#                 joined = ""
+#                 for value in values:
+#                     if len(joined) + len(value) + 1 <= 254:
+#                         joined += ("," if joined else "") + value
+#                     else:
+#                         break
+
+#                 if joined:
+#                     dropdown_formula = f'"{joined}"'
+#                     dv = DataValidation(type="list", formula1=dropdown_formula, showDropDown=False)
+#                     summary_ws.add_data_validation(dv)
+#                     dv.add(summary_ws.cell(row=i, column=dropdown_col_idx))
+
+#     # === 6. Move Summary to first sheet and save ===
+#     wb._sheets.insert(0, wb._sheets.pop(wb.sheetnames.index("Summary")))
+#     wb.save(output_path)
+#     return(wb)
     # print(f"Excel file saved to: {output_path}")
 
 def gallica_api(api_root = 'https://gallica.bnf.fr/services/OAIRecord?ark=', ark_id= 'btv1b104536783', verbose = True):
