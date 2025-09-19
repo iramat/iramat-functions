@@ -91,6 +91,7 @@ def create_bulkupload(output_path="aeamena_data.xlsx", root_url = 'https://aema.
                         dv.add(summary_ws.cell(row=row, column=col_idx))
 
     # === 6. Move Summary to first sheet and save ===
+    print("YOP")
     wb._sheets.insert(0, wb._sheets.pop(wb.sheetnames.index("Summary")))
     wb.save(output_path)
     return wb
