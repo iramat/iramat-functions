@@ -35,7 +35,17 @@ def generate_map_view(df, slug, dataset_map = None, ):
             ).add_to(marker_cluster)
 
     map_html = m.get_root().render()
-    return html.Iframe(srcDoc=map_html, width='100%', height='600')
+    # return html.Iframe(srcDoc=map_html, width='100%', height='100%')
+    # return html.Iframe(
+    #     srcDoc=map_html,
+    #     style={"width": "100%", "height": "100vh", "border": "none"}
+    # )
+    return html.Iframe(
+        srcDoc=map_html,
+        style={"width": "100%", "height": "100%", "border": "none", "flex": "1"}
+    )
+
+
 
 def generate_all_datasets_map(df = None, dataset_map = None, dataset_slugs = None):
     m = folium.Map(location=[45, 5], zoom_start=5)
@@ -54,7 +64,7 @@ def generate_all_datasets_map(df = None, dataset_map = None, dataset_slugs = Non
     # colors = [mcolors.to_hex(cmap(i / len(dataset_slugs))) for i in range(len(dataset_slugs))]
     cmap = plt.get_cmap('hsv')  # Good hue variety for many categories
     colors = [mcolors.to_hex(cmap(i / len(dataset_slugs))) for i in range(len(dataset_slugs))]
-    print(colors)
+    # print(colors)
     
     for idx, slug in enumerate(dataset_slugs):
         try:
@@ -90,4 +100,4 @@ def generate_all_datasets_map(df = None, dataset_map = None, dataset_slugs = Non
         except Exception as e:
             print(f"Failed to load dataset {slug}: {e}")
 
-    return html.Iframe(srcDoc=m.get_root().render(), width='100%', height='700')
+    return html.Iframe(srcDoc=m.get_root().render(), width='100%', height='100%')

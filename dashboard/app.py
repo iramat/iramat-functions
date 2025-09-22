@@ -11,7 +11,7 @@
 #   """
 #   - set `web = False`
 
-import os
+# import os
 import dash
 from dash import dcc, html, Input, Output, State
 import plotly.graph_objects as go
@@ -69,10 +69,23 @@ app.index_string = '''
 
 app.title = tit
 # app.favicon = ("logo.ico")
+# app.layout = html.Div([
+#     dcc.Location(id='url', refresh=False),
+#     html.Div(id='page-content')
+# ])
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
-    html.Div(id='page-content')
+    html.Div(
+        id='page-content',
+        style={
+            'display': 'flex',
+            'flexDirection': 'column',
+            'flex': '1',
+            'height': '100vh'   # full screen height
+        }
+    )
 ])
+
 
 @app.callback(
     Output('page-content', 'children'),
@@ -160,72 +173,15 @@ def display_page(pathname, search):
         ])
 
 
-    if path == "dataset" and search:
-        # Useful? seems never accessed...
-        slug = search.split('=')[-1]
-        return html.Div(style={'display': 'flex'}, children=[
-            html.Div(style={'width': '200px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
-                html.H1(tit),
-                html.H2("Dataset List"),
-                html.Ul([
-                    html.Li(html.A("🏠 Back to HOME", href="/dash/")),
-                    html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
-                    html.Hr(),
-                    *[
-                        html.Li(html.A(s, href=f"/dash/{s}")) for s in dataset_slugs
-                    ]
-                ])
-            ]),
-            html.Div(style={'flex': '1', 'padding': '20px'}, children=[
-                generate_dataset_page(dataset_map[slug])
-            ])
-        ])
-        # slug = search.split('=')[-1]
-        # return html.Div(style={'display': 'flex'}, children=[
-        #     html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
-        #         html.H2("Dataset List (Map View)"),
-        #         html.Ul([
-        #             html.Li(html.A("🏠 Back to Home", href="/dash/")),
-        #             html.Li(html.A("📈 View Line Chart", href=f"/dash/{slug}")),
-        #             html.Hr(),
-        #             *[
-        #                 html.Li(html.A(s, href=f"/dash/mapview?dataset={s}"))
-        #                 for s in dataset_slugs
-        #             ]
-        #         ])
-        #     ]),
-        #     html.Div(style={'flex': '1', 'padding': '20px'}, children=[
-        #         generate_map_view(slug)
-        #     ])
-        # ])
-
-    # elif path in dataset_map:
-    #     slug = path
-    #     return html.Div(style={'display': 'flex'}, children=[
-    #         html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
-    #             html.H2("Dataset Navigation"),
-    #             html.Ul([
-    #                 html.Li(html.A("🏠 Back to Home", href="/dash/")),
-    #                 html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
-    #                 html.Hr(),
-    #                 *[
-    #                     html.Li(html.A(s, href=f"/dash/{s}")) for s in dataset_slugs
-    #                 ]
-    #             ])
-    #         ]),
-    #         html.Div(style={'flex': '1', 'padding': '20px'}, children=[
-    #             generate_dataset_page(dataset_map[slug])
-    #         ])
-    #     ])
- 
-
-    # elif path in dataset_map:
-    #     slug = path
+    # if path == "dataset" and search:
+    #     # Useful? seems never accessed...
+    #     slug = search.split('=')[-1]
     #     return html.Div(style={'display': 'flex'}, children=[
     #         html.Div(style={'width': '200px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
+    #             html.H1(tit),
     #             html.H2("Dataset List"),
     #             html.Ul([
-    #                 html.Li(html.A("🏠 Back to HoMe", href="/dash/")),
+    #                 html.Li(html.A("🏠 Back to HOME", href="/dash/")),
     #                 html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
     #                 html.Hr(),
     #                 *[
@@ -234,7 +190,7 @@ def display_page(pathname, search):
     #             ])
     #         ]),
     #         html.Div(style={'flex': '1', 'padding': '20px'}, children=[
-    #             generate_dataset_page(dataset_map[slug])
+    #             generate_dataset_page(dataset_map[slug], slug)
     #         ])
     #     ])
     
@@ -244,21 +200,21 @@ def display_page(pathname, search):
         return html.Div(
             style={'flex': '1', 'padding': '20px'},
             children=[
-                html.Div(
-                    # style={
-                    #     'backgroundColor': '#f2f2f2',  # light grey background
-                    #     'padding': '10px',
-                    #     'borderRadius': '5px',
-                    #     'marginBottom': '15px'
-                    # },
-                    children=[
-                        html.Ul([
-                            html.Li(html.A("🏠 Back to HoMe", href="/dash/")),
-                            html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}"))
-                        ])
-                    ]
-                ),
-                generate_dataset_page(dataset_map[slug])
+                # html.Div(
+                #     # style={
+                #     #     'backgroundColor': '#f2f2f2',  # light grey background
+                #     #     'padding': '10px',
+                #     #     'borderRadius': '5px',
+                #     #     'marginBottom': '15px'
+                #     # },
+                #     children=[
+                #         html.Ul([
+                #             html.Li(html.A("🏠 Back to HoMe", href="/dash/")),
+                #             html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}"))
+                #         ])
+                #     ]
+                # ),
+                generate_dataset_page(dataset_map[slug], slug)
             ]
         )
     else:
@@ -326,7 +282,7 @@ def create_figure(dataset_url, log10=True, selected_sites=None):
     return fig, ref_html
 
 
-def generate_dataset_page(dataset_url):
+def generate_dataset_page(dataset_url, slug):
     dataset_name = re.search(r'[^/]+$', dataset_url).group()
     return html.Div(style={'display': 'flex', 'height': '100vh'}, children=[
 
@@ -336,22 +292,45 @@ def generate_dataset_page(dataset_url):
             'padding': '20px',
             'backgroundColor': '#f2f2f2',
             'overflowY': 'auto'
-        }, children=[
-            html.H3("Filter by Site"),
+        }, 
+        # children=[
+        #     html.H3("Filter by Site"),
 
-            html.Button("Select All", id='select-all-sites', n_clicks=0, style={'marginRight': '10px'}),
-            html.Button("Unselect All", id='unselect-all-sites', n_clicks=0),
+        #     html.Button("Select All", id='select-all-sites', n_clicks=0, style={'marginRight': '10px'}),
+        #     html.Button("Unselect All", id='unselect-all-sites', n_clicks=0),
 
-            html.Br(), html.Br(),
+        #     html.Br(), html.Br(),
 
-            dcc.Checklist(
-                id='site-filter',
-                options=[],   # Populated dynamically
-                value=[],     # All selected by default
-                labelStyle={'display': 'block'},
-                inputStyle={'margin-right': '10px'}
-            )
-        ]),
+        #     dcc.Checklist(
+        #         id='site-filter',
+        #         options=[],   # Populated dynamically
+        #         value=[],     # All selected by default
+        #         labelStyle={'display': 'block'},
+        #         inputStyle={'margin-right': '10px'}
+        #     )
+        # ]),
+        children=[
+                html.Ul([
+                    html.Li(html.A("🏠 Back to HoMe", href="/dash/")),
+                    html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}"))
+                ]),
+
+                html.H3("Filter by Site"),
+
+                html.Button("Select All", id='select-all-sites', n_clicks=0, style={'marginRight': '10px'}),
+                html.Button("Unselect All", id='unselect-all-sites', n_clicks=0),
+
+                html.Br(), html.Br(),
+
+                dcc.Checklist(
+                    id='site-filter',
+                    options=[],   # Populated dynamically
+                    value=[],     # All selected by default
+                    labelStyle={'display': 'block'},
+                    inputStyle={'margin-right': '10px'}
+                )
+            ]),
+
 
         # Main Content: Graph and controls
         html.Div(style={'flex': '1', 'padding': '20px'}, children=[
