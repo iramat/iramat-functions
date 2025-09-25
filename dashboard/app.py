@@ -92,6 +92,7 @@ app.layout = html.Div([
     Input('url', 'pathname'),
     State('url', 'search')
 )
+
 def display_page(pathname, search):
     # Remove '/dash/' prefix to isolate the slug
     path = pathname.replace('/dash/', '').strip('/')
@@ -127,30 +128,10 @@ def display_page(pathname, search):
                     html.Li(html.A(slug, href=f"/dash/mapview?dataset={slug}")) for slug in dataset_slugs
                 ])
             ]),
-            html.Div(style={'flex': '1', 'padding': '20px'}, children=[
+            html.Div(style={'flex': '1', 'padding': '20px', 'height': '90vh'}, children=[
                 generate_all_datasets_map(df = df, dataset_map = dataset_map, dataset_slugs = dataset_slugs)
             ])
         ])
-
-    # if path == "" or path == "index":
-    #     return html.Div(style={'display': 'flex'}, children=[
-    #             html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
-    #             html.H2("Welcome"),
-    #             html.P([
-    #                     "This dashboard helps exploring the CHIPS database. See also: ",
-    #                     html.A("GitHub", 
-    #                            href="https://github.com/iramat/iramat-dev/tree/main/dbs/chips",
-    #                            target="_blank")
-    #                 ]),
-    #             html.H3("Datasets"),
-    #             html.Ul([
-    #                 html.Li(html.A(slug, href=f"/dash/mapview?dataset={slug}")) for slug in dataset_slugs
-    #             ])
-    #         ]),
-    #         html.Div(style={'flex': '1', 'padding': '20px'}, children=[
-    #             generate_all_datasets_map(df = df, dataset_map = dataset_map, dataset_slugs = dataset_slugs)
-    #         ])
-    #     ])
 
     if path == "mapview" and search:
         slug = search.split('=')[-1]
@@ -167,7 +148,7 @@ def display_page(pathname, search):
                     ]
                 ])
             ]),
-            html.Div(style={'flex': '1', 'padding': '20px'}, children=[
+            html.Div(style={'flex': '1', 'padding': '20px', 'height': '90vh'}, children=[
                 generate_map_view(df, slug, dataset_map)
             ])
         ])
@@ -255,13 +236,9 @@ def create_figure(dataset_url, log10=True, selected_sites=None):
     y_title = "Log10 Value" if log10 else "Original Value"
 
     fig.update_layout(
-        # title=dict(
-        #     text=f"Dataset: {dataset_name}",
-        #     x=0,
-        #     xanchor='left'
-        # ),
         xaxis_title="Element",
-        yaxis_title=y_title
+        yaxis_title=y_title,
+        height=720
     )
 
     # HTML layout for references
@@ -277,7 +254,8 @@ def create_figure(dataset_url, log10=True, selected_sites=None):
                 refbib
             ])
         ])
-    ], style={'marginTop': '20px'})
+    # ], style={'marginTop': '0px', 'height': '80vh'})
+    ], style={'marginTop': '0px'})
 
     return fig, ref_html
 
@@ -293,22 +271,6 @@ def generate_dataset_page(dataset_url, slug):
             'backgroundColor': '#f2f2f2',
             'overflowY': 'auto'
         }, 
-        # children=[
-        #     html.H3("Filter by Site"),
-
-        #     html.Button("Select All", id='select-all-sites', n_clicks=0, style={'marginRight': '10px'}),
-        #     html.Button("Unselect All", id='unselect-all-sites', n_clicks=0),
-
-        #     html.Br(), html.Br(),
-
-        #     dcc.Checklist(
-        #         id='site-filter',
-        #         options=[],   # Populated dynamically
-        #         value=[],     # All selected by default
-        #         labelStyle={'display': 'block'},
-        #         inputStyle={'margin-right': '10px'}
-        #     )
-        # ]),
         children=[
                 html.Ul([
                     html.Li(html.A("🏠 Back to HoMe", href="/dash/")),

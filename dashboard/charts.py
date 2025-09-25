@@ -1,5 +1,6 @@
 # Function to get data from API
 def safe_log10(x):
+    # useful ? I guess get_data.safe_log10() does the same
     import numpy as np
     try:
         val = float(x)
@@ -8,6 +9,8 @@ def safe_log10(x):
         return np.nan
 
 def api_pg_dataset_linechart(url_dataset, url_reference_elements, log10=True):
+    """Returns data from the Postgres views API"""
+    # useful ? I guess get_data.get_data() does the same
     import pandas as pd
     import requests
     

@@ -47,25 +47,90 @@ def generate_map_view(df, slug, dataset_map = None, ):
 
 
 
-def generate_all_datasets_map(df = None, dataset_map = None, dataset_slugs = None):
-    m = folium.Map(location=[45, 5], zoom_start=5)
+# def generate_all_datasets_map(df = None, dataset_map = None, dataset_slugs = None, coloramp = 'tab20b'):
     
+#     import matplotlib.pyplot as plt
+#     import matplotlib.colors as mcolors
+    
+#     m = folium.Map(location=[45, 5], zoom_start=5)
+    
+#     cmap = plt.get_cmap(coloramp)  # previously: 'hsv'. Good hue variety for many categories
+#     colors = [mcolors.to_hex(cmap(i / len(dataset_slugs))) for i in range(len(dataset_slugs))]
+    
+#     for idx, slug in enumerate(dataset_slugs):
+#         try:
+#             result = get_data(dataset_map[slug], df["url_reference"])
+#             df_data = result['data']
+#             df_data = df_data.dropna(subset=['latitude', 'longitude'])
+
+#             points = list(zip(df_data['longitude'], df_data['latitude']))
+#             if len(points) >= 3:
+#                 # print(colors[idx % len(colors)])
+#                 multipoint = MultiPoint(points)
+#                 hull = multipoint.convex_hull
+#                 geojson = gpd.GeoSeries([hull]).__geo_interface__
+#                 folium.GeoJson(
+#                     geojson,
+#                     name=slug,
+#                     style_function=lambda x, color=colors[idx % len(colors)]: {
+#                         'fillColor': color, 'color': color, 'weight': 2, 'fillOpacity': 0.3
+#                     },
+#                     tooltip=slug,
+#                     popup=folium.Popup(f"<a href='/dash/mapview?dataset={slug}' target='_blank'>{slug}</a>")
+#                 ).add_to(m)
+
+#             for _, row in df_data.iterrows():
+#                 folium.CircleMarker(
+#                     location=[row['latitude'], row['longitude']],
+#                     radius=2,
+#                     color=colors[idx % len(colors)],
+#                     fill=True,
+#                     fill_opacity=0.7,
+#                     tooltip=row['site_name']
+#                 ).add_to(m)
+#         except Exception as e:
+#             print(f"Failed to load dataset {slug}: {e}")
+
+#     return html.Iframe(srcDoc=m.get_root().render(), width='100%', height='100%')
+
+def generate_all_datasets_map(df=None, dataset_map=None, dataset_slugs=None, coloramp='tab20b'):
     import matplotlib.pyplot as plt
     import matplotlib.colors as mcolors
+    import pandas as pd
+    from shapely.geometry import MultiPoint
+    import geopandas as gpd
+    import folium
+    # from IPython.display import HTML
+    # import html
 
-    # colors = [
-    # 'red', 'blue', 'green', 'purple', 'orange', 'darkred', 'lightblue',
-    # 'darkblue', 'lightgreen', 'cadetblue', 'darkgreen', 'lightred',
-    # 'black', 'gray', 'pink', 'lightgray', 'beige', 'brown', 'darkpurple',
-    # 'lightgray', 'yellow', 'lightyellow', 'navy', 'teal', 'aqua', 'gold',
-    # 'coral']
-    
-    # cmap = plt.get_cmap('tab20')  # or 'Set3', 'Dark2', etc.
-    # colors = [mcolors.to_hex(cmap(i / len(dataset_slugs))) for i in range(len(dataset_slugs))]
-    cmap = plt.get_cmap('hsv')  # Good hue variety for many categories
+    all_points = []  # To collect all lat/lon for mean center calculation
+
+    # === First pass: Collect all points ===
+    for slug in dataset_slugs:
+        try:
+            result = get_data(dataset_map[slug], df["url_reference"])
+            df_data = result['data']
+            df_data = df_data.dropna(subset=['latitude', 'longitude'])
+            all_points.extend(zip(df_data['latitude'], df_data['longitude']))
+        except Exception as e:
+            print(f"Failed to load dataset {slug} for center calculation: {e}")
+
+    # === Compute mean center from all collected lat/lon ===
+    if all_points:
+        latitudes, longitudes = zip(*all_points)
+        mean_lat = sum(latitudes) / len(latitudes)
+        mean_lon = sum(longitudes) / len(longitudes)
+    else:
+        mean_lat, mean_lon = 45, 5  # fallback default center
+
+    # === Initialize the map using calculated center ===
+    m = folium.Map(location=[mean_lat, mean_lon], zoom_start=5)
+
+    # === Color mapping ===
+    cmap = plt.get_cmap(coloramp)
     colors = [mcolors.to_hex(cmap(i / len(dataset_slugs))) for i in range(len(dataset_slugs))]
-    # print(colors)
-    
+
+    # === Plot data ===
     for idx, slug in enumerate(dataset_slugs):
         try:
             result = get_data(dataset_map[slug], df["url_reference"])
@@ -74,7 +139,6 @@ def generate_all_datasets_map(df = None, dataset_map = None, dataset_slugs = Non
 
             points = list(zip(df_data['longitude'], df_data['latitude']))
             if len(points) >= 3:
-                # print(colors[idx % len(colors)])
                 multipoint = MultiPoint(points)
                 hull = multipoint.convex_hull
                 geojson = gpd.GeoSeries([hull]).__geo_interface__
@@ -85,17 +149,18 @@ def generate_all_datasets_map(df = None, dataset_map = None, dataset_slugs = Non
                         'fillColor': color, 'color': color, 'weight': 2, 'fillOpacity': 0.3
                     },
                     tooltip=slug,
-                    popup=folium.Popup(f"<a href='/dash/mapview?dataset={slug}' target='_blank'>{slug}</a>")
+                    popup=folium.Popup(
+                        f"<a href='/dash/mapview?dataset={slug}' target='_blank'>{slug}</a>")
                 ).add_to(m)
 
             for _, row in df_data.iterrows():
                 folium.CircleMarker(
                     location=[row['latitude'], row['longitude']],
-                    radius=3,
+                    radius=2,
                     color=colors[idx % len(colors)],
                     fill=True,
                     fill_opacity=0.7,
-                    tooltip=row['site_name']
+                    tooltip=row.get('site_name', slug)
                 ).add_to(m)
         except Exception as e:
             print(f"Failed to load dataset {slug}: {e}")
