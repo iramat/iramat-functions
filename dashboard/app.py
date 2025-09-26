@@ -261,6 +261,7 @@ def create_figure(dataset_url, log10=True, selected_sites=None):
 
 
 def generate_dataset_page(dataset_url, slug):
+    """Generate the Line Chart view of a dataset"""
     dataset_name = re.search(r'[^/]+$', dataset_url).group()
     return html.Div(style={'display': 'flex', 'height': '100vh'}, children=[
 
@@ -273,7 +274,7 @@ def generate_dataset_page(dataset_url, slug):
         }, 
         children=[
                 html.Ul([
-                    html.Li(html.A("🏠 Back to HoMe", href="/dash/")),
+                    html.Li(html.A("🏠 Back to Home", href="/dash/")),
                     html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}"))
                 ]),
 
@@ -295,7 +296,7 @@ def generate_dataset_page(dataset_url, slug):
 
 
         # Main Content: Graph and controls
-        html.Div(style={'flex': '1', 'padding': '20px'}, children=[
+        html.Div(style={'flex': '1', 'padding': '10px'}, children=[
 
             # Wrap titles + references in a horizontal row
             html.Div(style={'display': 'flex', 'justifyContent': 'space-between'}, children=[
