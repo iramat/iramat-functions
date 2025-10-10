@@ -1,3 +1,77 @@
+def create_gh_issue(token = None, owner = None, repo = None):
+    import pandas as pd
+    import requests
+    import time
+    
+    all_vocabs = collect_vocab_2()
+    list_and_values = pd.concat(all_vocabs, axis=1)
+    result_val = [
+        f"{col} | {val}"
+        for col in list_and_values.columns
+        for val in list_and_values[col].dropna()
+    ]
+    # noms de colonnes
+    result_col = [
+        f"{col}"
+        for col in list_and_values.columns
+    ]
+    # fusionne + ordonne + supprime les doublons
+    joinedlist = result_col + result_val
+    joinedlist = sorted(joinedlist)
+    # print(type(joinedlist))
+    joinedlist = list(set(joinedlist))
+
+    # === SETTINGS ===
+    # token = "ghp_your_personal_access_token_here"  # 🔒 replace with your real token
+    # owner = "your-github-username"                 # e.g. "iramat"
+    # repo = "your-repo-name"                        # e.g. "aema-private"
+
+    # Example list of issue titles
+    # issue_titles = [
+    #     "Fix data import for communes",
+    #     "Add new vocabulary for object types",
+    #     "Update documentation on API endpoints"
+    # ]
+    # issue_titles = joinedlist
+    issue_titles = ['matieres-matiere | Or et alliages associés', 'observations-observation | Observation', 'contextes-contexte', 'series-serie', 'observations-observation', 'localisationtypes-type | Fouille', 'depots-lieuDepot | Cabinet des médailles - BNF Richelieu', 'tresors-tresor', 'denominations-denomination | Autre', 'mesuretypes-type | Au', 'emetteurs-emetteurAutorite | M. Valerius Messalla', 'communes-commune', 'mesuretypes-type | Pt/Pd', 'matieres-matiere | Alliages cuivreux | laiton', 'mesuretypes-type | Ag', 'ateliers-atelierEmission | Rome', 'descriptiftypes-type', 'matieres-matiere | Alliages cuivreux | bronze', 'matieres-matiere | Alliages cuivreux | cuivre', 'tresors-tresor | Autre', 'series-serie | Verca', 'depots-lieuDepot | Pépin le Bref', 'collections-collection | Luynes', 'mesuretypes-type | Pt', 'mesuretypes-type | Sb', 'localisationtypes-type', 'matieres-estMetal', 'localisationtypes-type | Découverte ancienne', 'fonctions-fonction | Autre', 'techniques-technique | Monnaie plaquée', 'communes-commune | Chantenay Saint-Imbert', 'mesuretypes-type | Rh', 'techniques-technique', 'matieres-matiere | Argent et alliages associés', 'series-serie | RRC 366/2a', 'descriptiftypes-type | Types de descriptif', 'emetteurs-emetteurAutorite | Marcus Junius Brutus', 'objetsoustypes-sousType', 'periodes-periode', 'matieres-matiere | Autres', 'objetsoustypes-sousType | Celtique', 'objettypes-type', 'matieres-estMetal | True', 'series-serie | Vercingetorix', 'ateliers-atelierEmission | Saint-Denis', 'ateliers-atelierEmission | Saint-Denis', 'ateliers-atelierEmission | Saint-Denis', 'ateliers-atelierEmission | Saint-Denis', 'ateliers-atelierEmission | Saint-Denis', 'ateliers-atelierEmission | Saint-Denis', 'ateliers-atelierEmission | Saint-Denis']
+
+
+    # print(issue_titles[80])
+
+    # Markdown bodies for each issue
+    issue_bodies = [
+"""## Listes
+
+Dernier état des listes AeMA: [listes_et_valeurs_latest.tsv](https://github.com/iramat/aema-private/blob/main/listes/listes_et_valeurs_latest.tsv).
+"""
+    ]
+
+    # GitHub API endpoint
+    url = f"https://api.github.com/repos/{owner}/{repo}/issues"
+
+    headers = {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+
+    # === LOOP TO CREATE ISSUES ===
+    for title in issue_titles:
+        # print(title)
+        payload = {
+            "title": f"LISTE | {title}",
+            "body": issue_bodies[0],
+            "labels": ["liste"]  # 👈 Add your tag/label here
+        }
+
+        response = requests.post(url, json=payload, headers=headers)
+
+        if response.status_code == 201:
+            print(f"✅ Created issue: {title}")
+        else:
+            print(f"❌ Failed to create issue '{title}': {response.status_code} {response.text}")
+            
+        time.sleep(3)
+
 def collect_vocab_2(
     vocabs=[
         "ateliers", "objettypes", "collections", "communes", "contextes", "denominations",
