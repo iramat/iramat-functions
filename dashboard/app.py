@@ -152,28 +152,6 @@ def display_page(pathname, search):
                 generate_map_view(df, slug, dataset_map)
             ])
         ])
-
-
-    # if path == "dataset" and search:
-    #     # Useful? seems never accessed...
-    #     slug = search.split('=')[-1]
-    #     return html.Div(style={'display': 'flex'}, children=[
-    #         html.Div(style={'width': '200px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
-    #             html.H1(tit),
-    #             html.H2("Dataset List"),
-    #             html.Ul([
-    #                 html.Li(html.A("🏠 Back to HOME", href="/dash/")),
-    #                 html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
-    #                 html.Hr(),
-    #                 *[
-    #                     html.Li(html.A(s, href=f"/dash/{s}")) for s in dataset_slugs
-    #                 ]
-    #             ])
-    #         ]),
-    #         html.Div(style={'flex': '1', 'padding': '20px'}, children=[
-    #             generate_dataset_page(dataset_map[slug], slug)
-    #         ])
-    #     ])
     
     elif path in dataset_map:
         # Chart view
@@ -181,20 +159,6 @@ def display_page(pathname, search):
         return html.Div(
             style={'flex': '1', 'padding': '20px'},
             children=[
-                # html.Div(
-                #     # style={
-                #     #     'backgroundColor': '#f2f2f2',  # light grey background
-                #     #     'padding': '10px',
-                #     #     'borderRadius': '5px',
-                #     #     'marginBottom': '15px'
-                #     # },
-                #     children=[
-                #         html.Ul([
-                #             html.Li(html.A("🏠 Back to HoMe", href="/dash/")),
-                #             html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}"))
-                #         ])
-                #     ]
-                # ),
                 generate_dataset_page(dataset_map[slug], slug)
             ]
         )

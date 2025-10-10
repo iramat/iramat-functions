@@ -1,4 +1,47 @@
-def collect_vocab(vocabs = None, root_url = 'https://aema.huma-num.fr/back/public/api/'):
+def collect_vocab_2(
+    vocabs=[
+        "ateliers", "objettypes", "collections", "communes", "contextes", "denominations",
+        "mesuretypes", "emetteurs", "fonctions", "depots", "matieres", "observations",
+        "pays", "periodes", "series", "objetsoustypes", "techniques", "tresors",
+        "types", "descriptiftypes", "localisationtypes", "zones"
+    ],
+    root_url='https://aema.huma-num.fr/back/public/api/'
+):
+    import pandas as pd
+    import requests
+
+    dfs = []
+
+    for vocab in vocabs:
+        url = f"{root_url}{vocab}"
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+
+            # Remove the 'id' field and rename other keys with the vocab prefix
+            processed_data = []
+            for item in data:
+                item.pop('id', None)  # Remove 'id' safely
+                renamed_item = {f"{vocab}-{k}": v for k, v in item.items()}
+                processed_data.append(renamed_item)
+
+            # Create a DataFrame from the processed data
+            df = pd.DataFrame(processed_data)
+            dfs.append(df)
+
+        except Exception as e:
+            print(f"Error fetching {vocab}: {e}")
+            dfs.append(pd.DataFrame())  # empty placeholder if error
+
+    return dfs
+
+def collect_vocab(vocabs = [
+        "ateliers", "objettypes", "collections", "communes", "contextes", "denominations",
+        "mesuretypes", "emetteurs", "fonctions", "depots", "matieres", "observations",
+        "pays", "periodes", "series", "objetsoustypes", "techniques", "tresors",
+        "types", "descriptiftypes", "localisationtypes", "zones"
+    ], root_url = 'https://aema.huma-num.fr/back/public/api/'):
 # === 2. Fetch data ===
     import pandas as pd
     import requests
