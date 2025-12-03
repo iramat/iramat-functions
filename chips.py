@@ -1,4 +1,4 @@
-def db_connect(pg_creds = 'C:/Users/TH282424/Rprojects/iramat-test/credentials/pg_credentials.json', verbose = True):
+def db_connect(pg_creds = 'C:/Users/TH282424/Rprojects/iramat-dev/credentials/pg_credentials.json', verbose = True):
   """
   Connect a database connection (engine)
 
@@ -167,6 +167,61 @@ def py_tempfile(response=None, module_name = "bdd"):
   spec = importlib.util.spec_from_file_location(module_name, tmp_file_path)
   module = importlib.util.module_from_spec(spec)
   spec.loader.exec_module(module)
+  
+def db_export_comments_to_excel(
+    pg_creds='C:/Users/TH282424/Rprojects/iramat-test/credentials/pg_credentials.json',
+    output_path=None,
+    verbose=True
+):
+    """
+    Export PostgreSQL schema (tables, fields, comments) to an Excel file.
+
+    - Uses db_connect() to get an engine
+    - Uses db_query() to get the schema info
+    - Uses db_store() to get a temporary XLSX path if output_path is None
+
+    Returns:
+        The path of the created XLSX file.
+        
+    >>> xlsx_path = db_export_comments_to_excel(
+                    pg_creds="C:/Users/TH282424/Rprojects/iramat-dev/credentials/pg_dev_credentials.json",
+                    output_path="C:/Users/TH282424/Rprojects/iramat-dev/dbs/chips/pg_tables_columns_comments.xlsx")
+    """
+    engine = db_connect(pg_creds=pg_creds, verbose=verbose)
+    comments_sql = """
+    SELECT
+        c.relname AS table_name,
+        a.attname AS column_name,
+        pg_catalog.format_type(a.atttypid, a.atttypmod) AS data_type,
+        col_description(a.attrelid, a.attnum) AS column_comment
+    FROM pg_catalog.pg_attribute a
+    JOIN pg_catalog.pg_class c
+        ON a.attrelid = c.oid
+    JOIN pg_catalog.pg_namespace n
+        ON c.relnamespace = n.oid
+    WHERE a.attnum > 0
+      AND NOT a.attisdropped
+      AND c.relkind = 'r' -- only ordinary tables
+      AND n.nspname NOT IN ('pg_catalog', 'information_schema')
+    ORDER BY n.nspname, c.relname, a.attnum;
+    """
+    import pandas as pd
+
+    df = db_query(comments_sql, engine=engine, verbose=verbose)
+    df["column_comment"] = df["column_comment"].fillna("")
+
+    if output_path is None:
+        temp_path = db_store(data="", verbose=verbose)
+        if not temp_path.lower().endswith(".xlsx"):
+            temp_path = temp_path + ".xlsx"
+        output_path = temp_path
+    if verbose:
+        print(f"Writing Excel file to: {output_path}")
+    with pd.ExcelWriter(output_path, engine="xlsxwriter") as writer:
+        df.to_excel(writer, index=False, sheet_name="schema")
+    if verbose:
+        print("Done.")
+    return output_path
 
 def zn_metadata(meta_data = None, verbose = True):
   """
