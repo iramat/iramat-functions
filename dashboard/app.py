@@ -14,13 +14,14 @@
 # import os
 import dash
 from dash import dcc, html, Input, Output, State
+import plotly.express as px  # only for color palettes
 import plotly.graph_objects as go
 import re
-# import pandas as pd
-import folium
-from folium.plugins import MarkerCluster
-from shapely.geometry import MultiPoint
-import geopandas as gpd
+import pandas as pd
+# import folium
+# from folium.plugins import MarkerCluster
+# from shapely.geometry import MultiPoint
+# import geopandas as gpd
 from get_data import get_data
 from urls import read_data_urls
 from maps import generate_map_view
@@ -53,7 +54,7 @@ app.index_string = '''
     <head>
         {%metas%}
         <title>{%title%}</title>
-        <link rel="icon" type="image/png" href="/dash/assets/logo.png">
+        <link rel="icon" type="image/png" href="/dash/assets/logo-chips-round.png">
         {%css%}
     </head>
     <body>
@@ -168,11 +169,71 @@ def display_page(pathname, search):
         html.P(f"No dataset or route found for: {pathname}")
     ])
 
+# def create_figure(dataset_url, log10=True, selected_sites=None):
+#     result = get_data(dataset_url, df["url_reference"], log10=log10)
+#     df_elt = result["elements"]
+#     df_data = result["data"]
+#     df_data['label'] = '<b>' + df_data['site_name'] + '</b>' + " - " + df_data['sample_name']
+
+#     # HTML-safe reference string
+#     refbib = html.A(df_data.at[0, 'reference'], href=df_data.at[0, 'url'], target='_blank')
+
+#     fig = go.Figure()
+
+#     for idx, row in df_elt.iterrows():
+#         site = df_data.loc[idx, 'site_name']
+#         if selected_sites and site not in selected_sites:
+#             continue
+
+#         label = df_data.loc[idx, 'label']
+#         customdata = [[label] for _ in df_elt.columns]
+
+#         fig.add_trace(go.Scatter(
+#             x=df_elt.columns,
+#             y=row.values,
+#             mode='lines+markers',
+#             customdata=customdata,
+#             hovertemplate='%{customdata[0]}<br><b>elt</b>: %{x} | <b>val</b>: %{y:.3f}<extra></extra>',
+#             name=label
+#         ))
+
+#     # dataset_name = re.search(r'[^/]+$', dataset_url).group()
+#     y_title = "Log10 Value" if log10 else "Original Value"
+
+#     fig.update_layout(
+#         xaxis_title="Element",
+#         yaxis_title=y_title,
+#         height=720
+#     )
+
+#     # HTML layout for references
+#     ref_html = html.Div([
+#         html.H4("Sources & References"),
+#         html.Ul([
+#             html.Li([
+#                 html.Span("API (data source): "),
+#                 html.A(dataset_url, href=dataset_url, target='_blank')
+#             ]),
+#             html.Li([
+#                 html.Span("Data reference: "),
+#                 refbib
+#             ])
+#         ])
+#     # ], style={'marginTop': '0px', 'height': '80vh'})
+#     ], style={'marginTop': '0px'})
+
+#     return fig, ref_html
+
 def create_figure(dataset_url, log10=True, selected_sites=None):
     result = get_data(dataset_url, df["url_reference"], log10=log10)
     df_elt = result["elements"]
     df_data = result["data"]
     df_data['label'] = '<b>' + df_data['site_name'] + '</b>' + " - " + df_data['sample_name']
+
+    # Assign 1 color per unique site_name
+    unique_sites = df_data["site_name"].unique()
+    colors = px.colors.qualitative.Alphabet  # or any palette
+    site_color_map = {site: colors[i % len(colors)] for i, site in enumerate(unique_sites)}
 
     # HTML-safe reference string
     refbib = html.A(df_data.at[0, 'reference'], href=df_data.at[0, 'url'], target='_blank')
@@ -185,40 +246,32 @@ def create_figure(dataset_url, log10=True, selected_sites=None):
             continue
 
         label = df_data.loc[idx, 'label']
+        color = site_color_map[site]   # ← always the same per site
         customdata = [[label] for _ in df_elt.columns]
 
         fig.add_trace(go.Scatter(
             x=df_elt.columns,
             y=row.values,
             mode='lines+markers',
+            line=dict(color=color),   # ← uniform color assignment
+            marker=dict(color=color),
             customdata=customdata,
             hovertemplate='%{customdata[0]}<br><b>elt</b>: %{x} | <b>val</b>: %{y:.3f}<extra></extra>',
             name=label
         ))
 
-    # dataset_name = re.search(r'[^/]+$', dataset_url).group()
-    y_title = "Log10 Value" if log10 else "Original Value"
-
     fig.update_layout(
         xaxis_title="Element",
-        yaxis_title=y_title,
+        yaxis_title="Log10 Value" if log10 else "Original Value",
         height=720
     )
 
-    # HTML layout for references
     ref_html = html.Div([
         html.H4("Sources & References"),
         html.Ul([
-            html.Li([
-                html.Span("API (data source): "),
-                html.A(dataset_url, href=dataset_url, target='_blank')
-            ]),
-            html.Li([
-                html.Span("Data reference: "),
-                refbib
-            ])
+            html.Li([html.Span("API: "), html.A(dataset_url, href=dataset_url, target='_blank')]),
+            html.Li([html.Span("Data reference: "), refbib])
         ])
-    # ], style={'marginTop': '0px', 'height': '80vh'})
     ], style={'marginTop': '0px'})
 
     return fig, ref_html
@@ -280,6 +333,17 @@ def generate_dataset_page(dataset_url, slug):
                         labelStyle={'display': 'inline-block', 'margin-right': '10px'}
                     ),
                 ]),
+                
+                # Middle column: CSV download
+                html.Div(style={'paddingRight': '20px'}, children=[
+                    html.Button(
+                        "⬇ Download CSV",
+                        id='download-csv-btn',
+                        n_clicks=0,
+                        style={'marginBottom': '10px'}
+                    ),
+                    dcc.Download(id='download-csv')
+                ]),
 
                 # Right column: Reference info
                 html.Div(style={'flex': '2'}, children=[
@@ -328,6 +392,20 @@ def update_site_filter(dataset_url, select_clicks, unselect_clicks):
         return options, []
     else:
         raise dash.exceptions.PreventUpdate
+
+@app.callback(
+    Output('download-csv', 'data'),
+    Input('download-csv-btn', 'n_clicks'),
+    State('current-dataset-url', 'data'),
+    prevent_initial_call=True
+)
+def download_csv(n_clicks, dataset_url):
+    # Recompute df_data from the same source used in create_figure
+    result = get_data(dataset_url, df["url_reference"], log10=True)
+    df_data = result["data"]
+
+    # Export df_data as CSV
+    return dcc.send_data_frame(df_data.to_csv, "chips_dataset.csv", index=False)
 
 # ----------- RUN SERVER ---------------- #
 
