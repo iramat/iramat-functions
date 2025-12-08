@@ -266,13 +266,35 @@ def create_figure(dataset_url, log10=True, selected_sites=None):
         height=720
     )
 
+    # ref_html = html.Div([
+    #     html.H4("Sources & References"),
+    #     html.Ul([
+    #         html.Li([html.Span("API: "), html.A(dataset_url, href=dataset_url, target='_blank')]),
+    #         html.Li([html.Span("Data reference: "), refbib])
+    #     ])
+    # ], style={'marginTop': '0px'})
     ref_html = html.Div([
         html.H4("Sources & References"),
         html.Ul([
-            html.Li([html.Span("API: "), html.A(dataset_url, href=dataset_url, target='_blank')]),
-            html.Li([html.Span("Data reference: "), refbib])
+            html.Li([
+                html.Span("API: "),
+                html.A(dataset_url, href=dataset_url, target='_blank')
+            ]),
+            html.Li([
+                html.Span("Data reference: "),
+                refbib, html.Span("  "),
+                html.Img(
+                        src="/dash/assets/lod-licences-cc-by.png",
+                        style={
+                            "height": "25px",
+                            "verticalAlign": "middle",
+                            "marginRight": "5px"
+                            }
+                         )
+            ])
         ])
     ], style={'marginTop': '0px'})
+
 
     return fig, ref_html
 
@@ -411,4 +433,4 @@ def download_csv(n_clicks, dataset_url):
 
 if __name__ == '__main__':
     # app.run(debug=True, host='0.0.0.0', port=8050)
-    app.run(debug=True, host="127.0.0.1", port=8051)
+    app.run(debug=True, host="127.0.0.1", port=8050)
