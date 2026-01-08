@@ -424,25 +424,6 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None):
         legend_title_text="site_name",
     )
 
-    # # References block (same style as your linechart)
-    # ref_html = html.Div([
-    #     html.H4("Sources & References"),
-    #     html.Ul([
-    #         html.Li([
-    #             html.A("API", href=dataset_url, target="_blank"),
-    #             # html.Span("API: "),
-    #             # html.A(dataset_url, href=dataset_url, target="_blank")
-    #         ]),
-    #         html.Li([
-    #             html.Span("Data reference: "),
-    #             refbib, html.Span("  "),
-    #             html.Img(
-    #                 src="/dash/assets/lod-licences-cc-by.png",
-    #                 style={"height": "25px", "verticalAlign": "middle", "marginRight": "5px"}
-    #             )
-    #         ])
-    #     ])
-    # ], style={"marginTop": "0px"})
     ref_html = html.Div([
         # html.H4("Sources & References"),
         html.Ul([
