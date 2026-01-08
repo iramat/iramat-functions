@@ -443,7 +443,7 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None):
                 html.Span("Data: "), 
                 html.A("API", href=dataset_url, target="_blank"), 
                 html.Span(" | "), 
-                html.A("CSV", id='download-csv-btn', n_clicks=0, href="#"), dcc.Download(id='download-csv')
+                html.A("CSV", id='tern-download-csv-btn', n_clicks=0, href="#"), dcc.Download(id='tern-download-csv')
             ]),
         ])
     ], style={'marginTop': '0px'})
