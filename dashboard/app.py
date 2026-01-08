@@ -145,8 +145,6 @@ def display_page(pathname, search):
                 html.H2("Dataset List"),
                 html.Ul([
                     html.Li(html.A("🏠 Back to Home", href="/dash/")),
-                    html.Li(html.A("📈 View Line Chart", href=f"/dash/{slug}")),
-                    html.Li(html.A("△ View Ternary Plot", href=f"/dash/charttern/{slug}")), # TODO
                     html.Hr(),
                     *[
                         html.Li(html.A(s, href=f"/dash/mapview?dataset={s}"))
@@ -156,6 +154,7 @@ def display_page(pathname, search):
             ]),
             html.Div(style={'flex': '1', 'padding': '20px', 'height': '90vh'}, children=[
                 html.H3(slug),
+                html.A("📈 Line Chart", href=f"/dash/{slug}"), html.Span(" | "), html.A("△ Ternary Plot", href=f"/dash/charttern/{slug}"), # TODO
                 generate_one_dataset(df, slug, dataset_map)
             ])
         ])
@@ -282,58 +281,15 @@ def create_figure_linechart(dataset_url, log10=True, selected_sites=None):
     fig.update_layout(
         xaxis_title="Element",
         yaxis_title="Log10 Value" if log10 else "Original Value",
-        height=720
+        height=600,
+        margin=dict(t=20, b=10, l=10, r=10)
     )
     
-    # # try stratified by sites
-    # for idx, row in df_elt.iterrows():
-    #     site = df_data.loc[idx, 'site_name']
-    #     if selected_sites and site not in selected_sites:
-    #         continue
-
-    #     label = df_data.loc[idx, 'label']
-    #     color = site_color_map[site]
-    #     customdata = [[label] for _ in df_elt.columns]
-
-    #     show_legend = bool(df_data.index[df_data['site_name'] == site][0] == idx)
-
-    #     fig.add_trace(go.Scatter(
-    #         x=df_elt.columns,
-    #         y=row.values,
-    #         mode='lines+markers',
-    #         line=dict(color=color),
-    #         marker=dict(color=color),
-    #         customdata=customdata,
-    #         hovertemplate='%{customdata[0]}<br><b>elt</b>: %{x} | <b>val</b>: %{y:.3f}<extra></extra>',
-    #         name=site,                 # <- legend shows site only
-    #         legendgroup=site,          # <- group by site
-    #         legendgrouptitle_text=site,# <- optional header (see note)
-    #         # showlegend=(df_data.index[df_data['site_name'] == site][0] == idx)  # only first trace shows in legend
-    #         showlegend=show_legend
-    #     ))
-
-    # fig.update_layout(
-    #     xaxis_title="Element",
-    #     yaxis_title="Log10 Value" if log10 else "Original Value",
-    #     height=720
-    # )
-
-    # ref_html = html.Div([
-    #     html.H4("Sources & References"),
-    #     html.Ul([
-    #         html.Li([html.Span("API: "), html.A(dataset_url, href=dataset_url, target='_blank')]),
-    #         html.Li([html.Span("Data reference: "), refbib])
-    #     ])
-    # ], style={'marginTop': '0px'})
     ref_html = html.Div([
-        html.H4("Sources & References"),
+        # html.H4("Sources & References"),
         html.Ul([
             html.Li([
-                html.Span("API: "),
-                html.A(dataset_url, href=dataset_url, target='_blank')
-            ]),
-            html.Li([
-                html.Span("Data reference: "),
+                html.Span("Reference: "),
                 refbib, html.Span("  "),
                 html.Img(
                         src="/dash/assets/lod-licences-cc-by.png",
@@ -343,10 +299,15 @@ def create_figure_linechart(dataset_url, log10=True, selected_sites=None):
                             "marginRight": "5px"
                             }
                          )
-            ])
+            ]),
+            html.Li([
+                html.Span("Data: "), 
+                html.A("API", href=dataset_url, target="_blank"), 
+                html.Span(" | "), 
+                html.A("CSV", id='download-csv-btn', n_clicks=0, href="#"), dcc.Download(id='download-csv')
+            ]),
         ])
     ], style={'marginTop': '0px'})
-
 
     return fig, ref_html
 
@@ -429,11 +390,12 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None):
     # --- Plotly ternary scatter ---
     # Build hover_data safely (ONLY existing columns)
     hover_data = {
+        # "label": True,
         "FeO_pct": ":.2f",
         "SiO2_pct": ":.2f",
         "Al2O3_pct": ":.2f",
-        "site_name": True,
-        "sample_name": True,
+        # "site_name": True,
+        # "sample_name": True,
     }
 
     # Add dataset ONLY if it exists
@@ -451,7 +413,8 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None):
     )
 
     fig.update_layout(
-        height=720,
+        height=600,
+        # margin=dict(t=20, b=10, l=10, r=10),
         ternary=dict(
             sum=100,
             aaxis_title="FeO (%)",
@@ -461,24 +424,48 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None):
         legend_title_text="site_name",
     )
 
-    # References block (same style as your linechart)
+    # # References block (same style as your linechart)
+    # ref_html = html.Div([
+    #     html.H4("Sources & References"),
+    #     html.Ul([
+    #         html.Li([
+    #             html.A("API", href=dataset_url, target="_blank"),
+    #             # html.Span("API: "),
+    #             # html.A(dataset_url, href=dataset_url, target="_blank")
+    #         ]),
+    #         html.Li([
+    #             html.Span("Data reference: "),
+    #             refbib, html.Span("  "),
+    #             html.Img(
+    #                 src="/dash/assets/lod-licences-cc-by.png",
+    #                 style={"height": "25px", "verticalAlign": "middle", "marginRight": "5px"}
+    #             )
+    #         ])
+    #     ])
+    # ], style={"marginTop": "0px"})
     ref_html = html.Div([
-        html.H4("Sources & References"),
+        # html.H4("Sources & References"),
         html.Ul([
             html.Li([
-                html.Span("API: "),
-                html.A(dataset_url, href=dataset_url, target="_blank")
-            ]),
-            html.Li([
-                html.Span("Data reference: "),
+                html.Span("Reference: "),
                 refbib, html.Span("  "),
                 html.Img(
-                    src="/dash/assets/lod-licences-cc-by.png",
-                    style={"height": "25px", "verticalAlign": "middle", "marginRight": "5px"}
-                )
-            ])
+                        src="/dash/assets/lod-licences-cc-by.png",
+                        style={
+                            "height": "25px",
+                            "verticalAlign": "middle",
+                            "marginRight": "5px"
+                            }
+                         )
+            ]),
+            html.Li([
+                html.Span("Data: "), 
+                html.A("API", href=dataset_url, target="_blank"), 
+                html.Span(" | "), 
+                html.A("CSV", id='download-csv-btn', n_clicks=0, href="#"), dcc.Download(id='download-csv')
+            ]),
         ])
-    ], style={"marginTop": "0px"})
+    ], style={'marginTop': '0px'})
 
     return fig, ref_html
 
@@ -495,9 +482,11 @@ def generate_dataset_page(dataset_url, slug):
             'overflowY': 'auto'
         }, 
         children=[
+                html.H3(f"{dataset_name}", style={"marginBottom": "20px"}),
                 html.Ul([
                     html.Li(html.A("🏠 Back to Home", href="/dash/")),
-                    html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}"))
+                    html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
+                    html.Li(html.A("△ View Ternary Plot", href=f"/dash/charttern/{slug}"))
                 ]),
 
                 html.H3("Filter by Site"),
@@ -526,7 +515,7 @@ def generate_dataset_page(dataset_url, slug):
                 # Left column: Title and controls
                 html.Div(style={'flex': '1', 'paddingRight': '20px'}, children=[
                     # html.H1(tit),
-                    html.H3(f"{dataset_name}", style={"marginBottom": "20px"}),
+                    # html.H3(f"{dataset_name}", style={"marginBottom": "20px"}),
                     dcc.Store(id='current-dataset-url', data=dataset_url),
                     dcc.RadioItems(
                         id='scale-selector',
@@ -540,15 +529,15 @@ def generate_dataset_page(dataset_url, slug):
                 ]),
                 
                 # Middle column: CSV download
-                html.Div(style={'paddingRight': '20px'}, children=[
-                    html.Button(
-                        "⬇ Download CSV",
-                        id='download-csv-btn',
-                        n_clicks=0,
-                        style={'marginBottom': '10px'}
-                    ),
-                    dcc.Download(id='download-csv')
-                ]),
+                # html.Div(style={'paddingRight': '20px'}, children=[
+                #     html.Button(
+                #         "⬇ Download CSV",
+                #         id='download-csv-btn',
+                #         n_clicks=0,
+                #         style={'marginBottom': '10px'}
+                #     ),
+                #     dcc.Download(id='download-csv')
+                # ]),
 
                 # Right column: Reference info
                 html.Div(style={'flex': '2'}, children=[
@@ -575,6 +564,7 @@ def generate_dataset_page_ternary(dataset_url, slug):
             'overflowY': 'auto'
         },
         children=[
+            html.H3(f"{dataset_name}", style={"marginBottom": "20px"}),
             html.Ul([
                 html.Li(html.A("🏠 Back to Home", href="/dash/")),
                 html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
@@ -602,22 +592,22 @@ def generate_dataset_page_ternary(dataset_url, slug):
 
             html.Div(style={'display': 'flex', 'justifyContent': 'space-between'}, children=[
 
-                # Left: title + store
+                # # Left: title + store
                 html.Div(style={'flex': '1', 'paddingRight': '20px'}, children=[
-                    html.H3(f"{dataset_name} — Ternary", style={"marginBottom": "20px"}),
+                    # html.H3(f"{dataset_name}", style={"marginBottom": "20px"}),
                     dcc.Store(id='tern-current-dataset-url', data=dataset_url),
                 ]),
 
-                # Middle: CSV download of *selected sites data* (optional)
-                html.Div(style={'paddingRight': '20px'}, children=[
-                    html.Button(
-                        "⬇ Download CSV",
-                        id='tern-download-csv-btn',
-                        n_clicks=0,
-                        style={'marginBottom': '10px'}
-                    ),
-                    dcc.Download(id='tern-download-csv')
-                ]),
+                # # Middle: CSV download of *selected sites data* (optional)
+                # html.Div(style={'paddingRight': '20px'}, children=[
+                #     html.Button(
+                #         "⬇ Download CSV",
+                #         id='tern-download-csv-btn',
+                #         n_clicks=0,
+                #         style={'marginBottom': '10px'}
+                #     ),
+                #     dcc.Download(id='tern-download-csv')
+                # ]),
 
                 # Right: references
                 html.Div(style={'flex': '2'}, children=[
