@@ -28,6 +28,9 @@ from maps import generate_map_view
 from maps import generate_all_datasets_map
 
 
+# customisation
+coloramp_all_dataset_map='tab20b'
+
 # assets_path = os.path.join(os.path.dirname(__file__), 'assets')
 
 # web = False
@@ -103,7 +106,7 @@ def display_page(pathname, search):
                 html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
                 html.H2("Welcome"),
                 html.P([
-                        "This dashboard helps Exploring The CHIPS Database. See also ",
+                        "This dashboard helps exploring The CHIPS Database. See also ",
                         # html.A("GitHub", 
                         #        href="https://github.com/iramat/chips",
                         #        target="_blank")
@@ -130,7 +133,7 @@ def display_page(pathname, search):
                 ])
             ]),
             html.Div(style={'flex': '1', 'padding': '20px', 'height': '90vh'}, children=[
-                generate_all_datasets_map(df = df, dataset_map = dataset_map, dataset_slugs = dataset_slugs)
+                generate_all_datasets_map(df = df, dataset_map = dataset_map, dataset_slugs = dataset_slugs, coloramp=coloramp_all_dataset_map)
             ])
         ])
 
