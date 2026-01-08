@@ -107,6 +107,7 @@ def generate_all_datasets_map(df=None, dataset_map=None, dataset_slugs=None, col
     points_json = json.dumps(all_points_records, ensure_ascii=False)
 
     # --- Inject everything via one loader that guarantees order inside srcdoc ---
+    # TODO: move this JS injection somewehere else
     export_js = f"""
 console.log("OVERVIEW EXPORT SCRIPT LOADED");
 
@@ -318,7 +319,7 @@ console.log("OVERVIEW EXPORT SCRIPT LOADED");
 
     return html.Iframe(srcDoc=m.get_root().render(), width="100%", height="100%")
 
-def generate_map_view(df, slug, dataset_map = None, ):
+def generate_one_dataset(df, slug, dataset_map = None, ):
     """
     Map for a specific dataset
     
@@ -359,7 +360,7 @@ def generate_map_view(df, slug, dataset_map = None, ):
     # )
     return html.Iframe(
         srcDoc=map_html,
-        style={"width": "100%", "height": "100%", "border": "none", "flex": "1"}
+        style={"width": "100%", "height": "90%", "border": "none", "flex": "1"}
     )
 
 
