@@ -159,6 +159,19 @@ def display_page(pathname, search):
                 generate_one_dataset(df, slug, dataset_map)
             ])
         ])
+        
+    # --- Ternary chart view: /dash/charttern/<slug> ---
+    if path.startswith("charttern/"):
+        slug = path.split("/", 1)[1]
+        if slug in dataset_map:
+            return html.Div(
+                style={'flex': '1', 'padding': '20px'},
+                children=[generate_dataset_page_ternary(dataset_map[slug], slug)]
+            )
+        return html.Div([
+            html.H2("404 - Page not found"),
+            html.P(f"No dataset found for: {slug}")
+        ])
     
     elif path in dataset_map:
         # Chart view
@@ -414,6 +427,19 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None):
     merged_df["Al2O3_pct"] = merged_df["Al2O3"] * 100.0 / merged_df[required].sum(axis=1)
 
     # --- Plotly ternary scatter ---
+    # Build hover_data safely (ONLY existing columns)
+    hover_data = {
+        "FeO_pct": ":.2f",
+        "SiO2_pct": ":.2f",
+        "Al2O3_pct": ":.2f",
+        "site_name": True,
+        "sample_name": True,
+    }
+
+    # Add dataset ONLY if it exists
+    if "dataset" in merged_df.columns:
+        hover_data["dataset"] = True
+
     fig = px.scatter_ternary(
         merged_df,
         a="FeO_pct",
@@ -421,14 +447,7 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None):
         c="Al2O3_pct",
         color="site_name",
         hover_name="label",
-        hover_data={
-            "FeO_pct": ":.2f",
-            "SiO2_pct": ":.2f",
-            "Al2O3_pct": ":.2f",
-            "site_name": True,
-            "sample_name": True,
-            "dataset": True if "dataset" in merged_df.columns else False,
-        },
+        hover_data=hover_data,
     )
 
     fig.update_layout(
@@ -542,6 +561,75 @@ def generate_dataset_page(dataset_url, slug):
         ])
     ])
 
+def generate_dataset_page_ternary(dataset_url, slug):
+    """Generate the Ternary Chart view of a dataset"""
+    dataset_name = re.search(r'[^/]+$', dataset_url).group()
+
+    return html.Div(style={'display': 'flex', 'height': '100vh'}, children=[
+
+        # Sidebar: Site Checklist
+        html.Div(style={
+            'width': '300px',
+            'padding': '20px',
+            'backgroundColor': '#f2f2f2',
+            'overflowY': 'auto'
+        },
+        children=[
+            html.Ul([
+                html.Li(html.A("🏠 Back to Home", href="/dash/")),
+                html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
+                html.Li(html.A("📈 View Line Chart", href=f"/dash/{slug}")),
+            ]),
+
+            html.H3("Filter by Site"),
+
+            html.Button("Select All", id='tern-select-all-sites', n_clicks=0, style={'marginRight': '10px'}),
+            html.Button("Unselect All", id='tern-unselect-all-sites', n_clicks=0),
+
+            html.Br(), html.Br(),
+
+            dcc.Checklist(
+                id='tern-site-filter',
+                options=[],
+                value=[],
+                labelStyle={'display': 'block'},
+                inputStyle={'margin-right': '10px'}
+            )
+        ]),
+
+        # Main Content
+        html.Div(style={'flex': '1', 'padding': '10px'}, children=[
+
+            html.Div(style={'display': 'flex', 'justifyContent': 'space-between'}, children=[
+
+                # Left: title + store
+                html.Div(style={'flex': '1', 'paddingRight': '20px'}, children=[
+                    html.H3(f"{dataset_name} — Ternary", style={"marginBottom": "20px"}),
+                    dcc.Store(id='tern-current-dataset-url', data=dataset_url),
+                ]),
+
+                # Middle: CSV download of *selected sites data* (optional)
+                html.Div(style={'paddingRight': '20px'}, children=[
+                    html.Button(
+                        "⬇ Download CSV",
+                        id='tern-download-csv-btn',
+                        n_clicks=0,
+                        style={'marginBottom': '10px'}
+                    ),
+                    dcc.Download(id='tern-download-csv')
+                ]),
+
+                # Right: references
+                html.Div(style={'flex': '2'}, children=[
+                    html.Div(id='tern-reference-info'),
+                ])
+            ]),
+
+            dcc.Graph(id='ternary-graph')
+        ])
+    ])
+
+
 @app.callback(
     Output('dataset-graph', 'figure'),
     Output('reference-info', 'children'),
@@ -556,6 +644,17 @@ def update_graph(scale_mode, dataset_url, selected_sites):
     return fig, ref_html
 
 @app.callback(
+    Output('ternary-graph', 'figure'),
+    Output('tern-reference-info', 'children'),
+    Input('tern-current-dataset-url', 'data'),
+    Input('tern-site-filter', 'value'),
+)
+def update_ternary_graph(dataset_url, selected_sites):
+    """Update the ternary chart"""
+    fig, ref_html = create_figure_ternary(dataset_url, log10=False, selected_sites=selected_sites)
+    return fig, ref_html
+
+@app.callback(
     Output('site-filter', 'options'),
     Output('site-filter', 'value'),
     Input('current-dataset-url', 'data'),
@@ -563,7 +662,6 @@ def update_graph(scale_mode, dataset_url, selected_sites):
     Input('unselect-all-sites', 'n_clicks')#,
     # prevent_initial_call=True
 )
-
 def update_site_filter(dataset_url, select_clicks, unselect_clicks):
     ctx = dash.callback_context
     triggered_id = ctx.triggered[0]['prop_id'].split('.')[0] if ctx.triggered else 'current-dataset-url'
@@ -581,6 +679,31 @@ def update_site_filter(dataset_url, select_clicks, unselect_clicks):
         raise dash.exceptions.PreventUpdate
 
 @app.callback(
+    Output('tern-site-filter', 'options'),
+    Output('tern-site-filter', 'value'),
+    Input('tern-current-dataset-url', 'data'),
+    Input('tern-select-all-sites', 'n_clicks'),
+    Input('tern-unselect-all-sites', 'n_clicks'),
+)
+def update_tern_site_filter(dataset_url, select_clicks, unselect_clicks):
+    ctx = dash.callback_context
+    triggered_id = ctx.triggered[0]['prop_id'].split('.')[0] if ctx.triggered else 'tern-current-dataset-url'
+
+    # Use same source as your other filter: data frame has site_name
+    result = get_data(dataset_url, df["url_reference"], log10=True)
+    df_data = result["data"]
+    site_names = sorted(df_data['site_name'].dropna().unique().tolist())
+    options = [{'label': name, 'value': name} for name in site_names]
+
+    if triggered_id in ('tern-select-all-sites', 'tern-current-dataset-url'):
+        return options, site_names
+    elif triggered_id == 'tern-unselect-all-sites':
+        return options, []
+    else:
+        raise dash.exceptions.PreventUpdate
+
+
+@app.callback(
     Output('download-csv', 'data'),
     Input('download-csv-btn', 'n_clicks'),
     State('current-dataset-url', 'data'),
@@ -593,6 +716,22 @@ def download_csv(n_clicks, dataset_url):
 
     # Export df_data as CSV
     return dcc.send_data_frame(df_data.to_csv, "chips_dataset.csv", index=False)
+
+@app.callback(
+    Output('tern-download-csv', 'data'),
+    Input('tern-download-csv-btn', 'n_clicks'),
+    State('tern-current-dataset-url', 'data'),
+    State('tern-site-filter', 'value'),
+    prevent_initial_call=True
+)
+def download_tern_csv(n_clicks, dataset_url, selected_sites):
+    result = get_data(dataset_url, df["url_reference"], log10=False)
+    df_data = result["data"]
+
+    if selected_sites:
+        df_data = df_data[df_data["site_name"].isin(selected_sites)].copy()
+
+    return dcc.send_data_frame(df_data.to_csv, "chips_ternary_data.csv", index=False)
 
 # ----------- RUN SERVER ---------------- #
 
