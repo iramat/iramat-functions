@@ -1,3 +1,11 @@
+from __future__ import annotations
+
+from typing import Dict, Iterable, Optional, Tuple
+import sys
+import psycopg2
+from psycopg2 import sql
+
+
 def db_connect(pg_creds = 'C:/Users/TH282424/Rprojects/iramat-dev/credentials/pg_credentials.json', verbose = True):
   """
   Connect a database connection (engine)
@@ -249,3 +257,98 @@ def zn_metadata(meta_data = None, verbose = True):
       }
   }
   return(metadata)
+
+def _github_blob_to_raw(url: str) -> str:
+    if url.startswith("https://github.com/") and "/blob/" in url:
+        return url.replace("https://github.com/", "https://raw.githubusercontent.com/").replace("/blob/", "/")
+    return url
+
+
+def _download_text(url: str, timeout_s: int = 60) -> str:
+    import urllib.request
+
+    req = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": "chips-comment-importer/1.0 (+https://github.com/iramat/chips)",
+            "Accept": "text/plain, text/tab-separated-values, */*",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=timeout_s) as resp:
+        data = resp.read()
+
+    # The TSV is Latin-1 / Windows-1252, NOT UTF-8
+    return data.decode("latin-1")
+
+
+def _iter_comments_from_tsv(tsv_text: str) -> Iterable[Tuple[str, str, Optional[str]]]:
+    import csv, io
+    reader = csv.DictReader(io.StringIO(tsv_text), delimiter="\t")
+    if reader.fieldnames is None:
+        raise ValueError("TSV appears to have no header row.")
+
+    required = {"table_name", "column_name", "comment"}
+    missing = required - set(reader.fieldnames)
+    if missing:
+        raise ValueError(f"TSV is missing required columns: {sorted(missing)}. Found: {reader.fieldnames}")
+
+    for row in reader:
+        table = (row.get("table_name") or "").strip()
+        col = (row.get("column_name") or "").strip()
+        comment = (row.get("comment") or "").strip()
+        if not table or not col:
+            continue
+        yield table, col, (comment if comment else None)
+
+
+def db_import_comments_from_tsv(
+    host: str = "157.136.252.188",
+    port: int = 5432,
+    db_name: str = "chips_d",
+    db_user: str = "postgres",
+    db_pwd: str = "xxx",
+    db_schema: str = "public",
+    tsv_url: str = "https://github.com/iramat/chips/blob/main/metadata/pg_tables_columns_comments.tsv",
+    timeout_s: int = 60,
+    stop_on_error: bool = False,
+) -> Dict[str, int]:
+
+    raw_url = _github_blob_to_raw(tsv_url)
+    tsv_text = _download_text(raw_url, timeout_s=timeout_s)
+
+    rows = list(_iter_comments_from_tsv(tsv_text))
+    if not rows:
+        raise ValueError("No valid (table_name, column_name, comment) rows found in TSV.")
+
+    conn = psycopg2.connect(host=host, port=port, dbname=db_name, user=db_user, password=db_pwd)
+
+    applied = skipped = errors = 0
+    try:
+        with conn:
+            with conn.cursor() as cur:
+                for table, col, comment in rows:
+                    try:
+                        if comment is None:
+                            stmt = sql.SQL("COMMENT ON COLUMN {}.{}.{} IS NULL").format(
+                                sql.Identifier(db_schema),
+                                sql.Identifier(table),
+                                sql.Identifier(col),
+                            )
+                        else:
+                            stmt = sql.SQL("COMMENT ON COLUMN {}.{}.{} IS {}").format(
+                                sql.Identifier(db_schema),
+                                sql.Identifier(table),
+                                sql.Identifier(col),
+                                sql.Literal(comment),
+                            )
+                        cur.execute(stmt)
+                        applied += 1
+                    except Exception as e:
+                        errors += 1
+                        if stop_on_error:
+                            raise
+                        print(f"[ERROR] {db_schema}.{table}.{col}: {e.__class__.__name__}: {e}", file=sys.stderr)
+    finally:
+        conn.close()
+
+    return {"applied": applied, "skipped": skipped, "errors": errors}
