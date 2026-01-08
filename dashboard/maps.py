@@ -10,12 +10,7 @@ from get_data import get_data
 
 def generate_all_datasets_map(df=None, dataset_map=None, dataset_slugs=None, coloramp="tab20b"):
     """
-    Map for all datasets (landing map)
-    
-    :param df: Description
-    :param dataset_map: Description
-    :param dataset_slugs: Description
-    :param coloramp: Description
+    Landing map with: hulls + points + draw selection (rectangle/polygon) + delete + download CSV button.
     """
     import matplotlib.pyplot as plt
     import matplotlib.colors as mcolors
@@ -23,50 +18,39 @@ def generate_all_datasets_map(df=None, dataset_map=None, dataset_slugs=None, col
     import geopandas as gpd
     import folium
     import pandas as pd
+    import json
+    from branca.element import Element
 
     # --- Collect all points for centering and for JS selection ---
     all_points_latlon = []
-    all_points_records = []  # records for JS selection/export
+    all_points_records = []
 
     for slug in dataset_slugs:
         try:
             result = get_data(dataset_map[slug], df["url_reference"])
             df_data = result["data"].dropna(subset=["latitude", "longitude"]).copy()
 
-            # collect for map center
             all_points_latlon.extend(zip(df_data["latitude"], df_data["longitude"]))
 
-            # collect for JS selection/export
-            # for _, row in df_data.iterrows():
-            #     all_points_records.append({
-            #         "site_name": row.get("site_name", ""),
-            #         "sample_name": row.get("sample_name", ""),
-            #         "dataset": slug,
-            #         "latitude": float(row["latitude"]),
-            #         "longitude": float(row["longitude"])
-            #     })
-            # Create a copy and add the slug column
-            
-            # Assuming 'slug' comes from your outer loop
             for _, row in df_data.iterrows():
-                # 1. Create the base record from all columns in the row
-                record = row.to_dict()
-                
-                # 2. Add or update specific fields
-                # We use .update() or direct assignment to ensure specific logic is applied
-                record.update({
-                    "dataset": slug,
-                    "latitude": float(row["latitude"]),
-                    "longitude": float(row["longitude"])
-                })
-                
-                # 3. Append to the master list
-                all_points_records.append(record)
-            
+                rec = row.to_dict()
+
+                # make JSON-safe-ish (timestamps / NaN)
+                for k, v in list(rec.items()):
+                    if pd.isna(v):
+                        rec[k] = None
+                    elif isinstance(v, pd.Timestamp):
+                        rec[k] = v.isoformat()
+
+                # ensure required fields exist and are numbers
+                rec["dataset"] = slug
+                rec["latitude"] = float(row["latitude"])
+                rec["longitude"] = float(row["longitude"])
+
+                all_points_records.append(rec)
+
         except Exception as e:
             print(f"Failed to load dataset {slug} for points collection: {e}")
-            
-    # print(df_data.columns) # OK
 
     # --- Compute map center ---
     if all_points_latlon:
@@ -79,39 +63,16 @@ def generate_all_datasets_map(df=None, dataset_map=None, dataset_slugs=None, col
     # --- Initialize map ---
     m = folium.Map(location=[mean_lat, mean_lon], zoom_start=5)
 
-    # --- IMPORTANT: load your libs INSIDE the iframe (match your assets filenames) ---
-    # If your Leaflet/Draw/Turf are not in assets with these names, change them here.
-    m.get_root().header.add_child(Element('<link rel="stylesheet" href="/dash/assets/10_leaflet.css">'))
-    m.get_root().header.add_child(Element('<link rel="stylesheet" href="/dash/assets/20_leaflet.draw.css">'))
-    m.get_root().header.add_child(Element('<script src="/dash/assets/10_leaflet.js"></script>'))
-    m.get_root().header.add_child(Element('<script src="/dash/assets/20_leaflet.draw.js"></script>'))
-    m.get_root().header.add_child(Element('<script src="/dash/assets/30_turf.min.js"></script>'))
-
-    # --- Add draw tools (rectangle + polygon) ---
-    Draw(
-        export=False,
-        draw_options={
-            "polyline": False,
-            "rectangle": True,
-            "polygon": True,
-            "circle": False,
-            "marker": False,
-            "circlemarker": False,
-        },
-        edit_options={"edit": True, "remove": True},
-    ).add_to(m)
-
-    # --- Color mapping for datasets ---
+    # --- Color mapping ---
     cmap = plt.get_cmap(coloramp)
     colors = [mcolors.to_hex(cmap(i / max(1, len(dataset_slugs)))) for i in range(len(dataset_slugs))]
 
-    # --- Plot hulls + circle points ---
+    # --- Plot hulls + points ---
     for idx, slug in enumerate(dataset_slugs):
         try:
             result = get_data(dataset_map[slug], df["url_reference"])
             df_data = result["data"].dropna(subset=["latitude", "longitude"]).copy()
-            
-            # hull
+
             points = list(zip(df_data["longitude"], df_data["latitude"]))
             if len(points) >= 3:
                 hull = MultiPoint(points).convex_hull
@@ -129,7 +90,6 @@ def generate_all_datasets_map(df=None, dataset_map=None, dataset_slugs=None, col
                     popup=folium.Popup(f"<a href='/dash/mapview?dataset={slug}' target='_blank'>{slug}</a>"),
                 ).add_to(m)
 
-            # points
             for _, row in df_data.iterrows():
                 folium.CircleMarker(
                     location=[float(row["latitude"]), float(row["longitude"])],
@@ -143,34 +103,36 @@ def generate_all_datasets_map(df=None, dataset_map=None, dataset_slugs=None, col
         except Exception as e:
             print(f"Failed to load dataset {slug}: {e}")
 
-    # --- Inject selection + download button JS into Folium's script section ---
     map_name = m.get_name()
-    # def _json_safe(v):
-    #     # Convert pandas/numpy stuff to JSON-safe primitives
-    #     if pd.isna(v):
-    #         return None
-    #     # convert timestamps/dates to strings
-    #     try:
-    #         import pandas as pd
-    #         if isinstance(v, pd.Timestamp):
-    #             return v.isoformat()
-    #     except Exception:
-    #         pass
-    #     return v
+    points_json = json.dumps(all_points_records, ensure_ascii=False)
 
-    # # make every record JSON-safe
-    # safe_records = []
-    # for rec in all_points_records:
-    #     safe_records.append({k: _json_safe(v) for k, v in rec.items()})
-
-    # points_json = json.dumps(safe_records, ensure_ascii=False)
-    
-    points_json = json.dumps(all_points_records)
-
+    # --- Inject everything via one loader that guarantees order inside srcdoc ---
     export_js = f"""
 console.log("OVERVIEW EXPORT SCRIPT LOADED");
 
 (function() {{
+  // ---- tiny loader to ensure order: Leaflet (from Folium) -> Leaflet.draw -> turf ----
+  function loadScript(src) {{
+    return new Promise(function(resolve, reject) {{
+      var s = document.createElement("script");
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = function() {{ reject(new Error("Failed to load " + src)); }};
+      document.head.appendChild(s);
+    }});
+  }}
+
+  function loadCss(href) {{
+    return new Promise(function(resolve, reject) {{
+      var l = document.createElement("link");
+      l.rel = "stylesheet";
+      l.href = href;
+      l.onload = resolve;
+      l.onerror = function() {{ reject(new Error("Failed to load " + href)); }};
+      document.head.appendChild(l);
+    }});
+  }}
+ 
   function escapeCsv(v) {{
     if (v === null || v === undefined) return "";
     var s = String(v);
@@ -180,43 +142,41 @@ console.log("OVERVIEW EXPORT SCRIPT LOADED");
     return s;
   }}
 
+
   function downloadCSV(rows) {{
-    if (rows.length === 0) return;
+    if (!rows || rows.length === 0) return;
 
-    // 1. Dynamically get all keys (column names) from the first object
-    var header = Object.keys(rows[0]);
-    
-    // 2. Create the header row
+    // union of keys (all columns)
+    var headerSet = {{}};
+    rows.forEach(function(r) {{
+      Object.keys(r || {{}}).forEach(function(k) {{ headerSet[k] = true; }});
+    }});
+    var header = Object.keys(headerSet);
+
     var out = [header.join(",")];
-
-    // 3. Iterate through each selected point
     rows.forEach(function(p) {{
       var row = header.map(function(fieldName) {{
-        // Look up the value for this specific column name
-        return escapeCsv(p[fieldName]);
-    }});
+        return escapeCsv(p ? p[fieldName] : "");
+      }});
       out.push(row.join(","));
     }});
 
-    // 4. Trigger the download
-    var csv = out.join("\\n");
+    var csv = out.join("\\r\\n");
+
     var blob = new Blob([csv], {{type: "text/csv;charset=utf-8;"}});
     var url = URL.createObjectURL(blob);
-    
-    // Build filename: chips_YYYY-MM-DD_<N>.csv
+
+    // chips_dYYYY-MM-DD_nN.csv
     var today = new Date();
     var yyyy = today.getFullYear();
     var mm = String(today.getMonth() + 1).padStart(2, "0");
     var dd = String(today.getDate()).padStart(2, "0");
-
     var dateStr = yyyy + "-" + mm + "-" + dd;
     var count = rows.length;
 
     var a = document.createElement("a");
     a.href = url;
-    // a.download = "selected_points.csv";
     a.download = "chips_d" + dateStr + "_n" + count + ".csv";
-
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -256,73 +216,107 @@ console.log("OVERVIEW EXPORT SCRIPT LOADED");
 
     container.appendChild(btn);
   }}
-  
-  
 
-  // Wait for map + Leaflet at minimum, show button immediately
-  var tries = 0;
-  var t = setInterval(function() {{
-    tries++;
+  // wait for Folium to create the map + Leaflet global L
+  function waitForLeafletAndMap() {{
+    return new Promise(function(resolve, reject) {{
+      var tries = 0;
+      var t = setInterval(function() {{
+        tries++;
+        var mapOk = (typeof {map_name} !== "undefined");
+        var leafletOk = (typeof L !== "undefined");
 
-    var mapOk = (typeof {map_name} !== "undefined");
-    var leafletOk = (typeof L !== "undefined");
-    var drawOk = leafletOk && !!L.Draw;
-    var turfOk = (typeof turf !== "undefined");
+        if (mapOk && leafletOk) {{
+          clearInterval(t);
+          resolve({map_name});
+        }}
+        if (tries > 200) {{
+          clearInterval(t);
+          reject(new Error("Map/Leaflet not ready"));
+        }}
+      }}, 50);
+    }});
+  }}
 
-    if (mapOk && leafletOk) {{
-      var map = {map_name};
+  waitForLeafletAndMap()
+    .then(function(map) {{
       ensureButton(map);
 
-      // enable selection when draw+turf are ready
-      if (drawOk && turfOk) {{
-        clearInterval(t);
-
-        var POINTS = {points_json};
-        window.__selectedPoints = [];
-
-        var drawnItems = new L.FeatureGroup();
-        map.addLayer(drawnItems);
-
-        map.off(L.Draw.Event.CREATED);
-        map.on(L.Draw.Event.CREATED, function(e) {{
-          drawnItems.clearLayers();
-          drawnItems.addLayer(e.layer);
-
-          var shape = e.layer.toGeoJSON();
-          var selected = [];
-
-          for (var i = 0; i < POINTS.length; i++) {{
-            var p = POINTS[i];
-            var pt = turf.point([p.longitude, p.latitude]);
-            if (turf.booleanPointInPolygon(pt, shape)) {{
-              selected.push(p);
-            }}
-          }}
-
-          window.__selectedPoints = selected;
-
-          var btn = map.getContainer().querySelector("#download-selection-btn");
-          if (btn) btn.textContent = "⬇ Download selection (" + selected.length + ")";
-        }});
-
+      // IMPORTANT: load draw + turf only after Leaflet exists
+      return Promise.all([
+        loadCss("/dash/assets/20_leaflet.draw.css"),
+        loadScript("/dash/assets/20_leaflet.draw.js"),
+        loadScript("/dash/assets/30_turf.min.js"),
+      ]).then(function() {{ return map; }});
+    }})
+    .then(function(map) {{
+      if (!L.Control || !L.Control.Draw) {{
+        console.error("Leaflet.draw did not attach (L.Control.Draw missing).");
         return;
       }}
-    }}
 
-    if (tries > 200) {{
-      clearInterval(t);
-      console.error("Overview export init failed:", {{
-        mapOk: mapOk, leafletOk: leafletOk, drawOk: drawOk, turfOk: turfOk
+      var POINTS = {points_json};
+      window.__selectedPoints = [];
+
+      // One editable group wired to toolbar => delete works
+      var editableLayers = new L.FeatureGroup();
+      map.addLayer(editableLayers);
+
+      var drawControl = new L.Control.Draw({{
+        edit: {{ featureGroup: editableLayers, remove: true }},
+        draw: {{
+          polyline: false,
+          rectangle: true,
+          polygon: true,
+          circle: false,
+          marker: false,
+          circlemarker: false
+        }}
       }});
-    }}
-  }}, 50);
+      map.addControl(drawControl);
+
+      map.on(L.Draw.Event.CREATED, function(e) {{
+        editableLayers.clearLayers();
+        editableLayers.addLayer(e.layer);
+
+        if (typeof turf === "undefined") {{
+          alert("Turf is not loaded, selection export is disabled.");
+          window.__selectedPoints = [];
+          return;
+        }}
+
+        var shape = e.layer.toGeoJSON();
+        var selected = [];
+
+        for (var i = 0; i < POINTS.length; i++) {{
+          var p = POINTS[i];
+          var pt = turf.point([p.longitude, p.latitude]);
+          if (turf.booleanPointInPolygon(pt, shape)) {{
+            selected.push(p);
+          }}
+        }}
+
+        window.__selectedPoints = selected;
+
+        var btn = map.getContainer().querySelector("#download-selection-btn");
+        if (btn) btn.textContent = "⬇ Download selection (" + selected.length + ")";
+      }});
+
+      map.on("draw:deleted", function() {{
+        window.__selectedPoints = [];
+        var btn = map.getContainer().querySelector("#download-selection-btn");
+        if (btn) btn.textContent = "Download selection";
+      }});
+    }})
+    .catch(function(err) {{
+      console.error(err);
+    }});
 
 }})();
 """
     m.get_root().script.add_child(Element(export_js))
 
     return html.Iframe(srcDoc=m.get_root().render(), width="100%", height="100%")
-
 
 def generate_map_view(df, slug, dataset_map = None, ):
     """
