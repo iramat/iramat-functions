@@ -394,6 +394,7 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None):
         "FeO_pct": ":.2f",
         "SiO2_pct": ":.2f",
         "Al2O3_pct": ":.2f",
+        "typology": True,
         # "site_name": True,
         # "sample_name": True,
     }
