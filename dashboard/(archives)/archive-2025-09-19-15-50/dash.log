@@ -1,0 +1,92 @@
+nohup: ignoring input
+Dash is running on http://0.0.0.0:8050/dash/
+
+ * Serving Flask app 'app'
+ * Debug mode: on
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+/home/ubuntu/dashboard/get_data.py:39: SettingWithCopyWarning:
+
+
+A value is trying to be set on a copy of a slice from a DataFrame
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+/home/ubuntu/dashboard/get_data.py:39: SettingWithCopyWarning:
+
+
+A value is trying to be set on a copy of a slice from a DataFrame
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+/home/ubuntu/dashboard/get_data.py:39: SettingWithCopyWarning:
+
+
+A value is trying to be set on a copy of a slice from a DataFrame
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index
+Failed to load dataset dataset_leschenlohr01: ['latitude', 'longitude']
+Failed to load dataset dataset_mbenvenuti13: If using all scalar values, you must pass an index

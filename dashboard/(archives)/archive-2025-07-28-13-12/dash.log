@@ -1,0 +1,13 @@
+nohup: ignoring input
+Dash is running on http://0.0.0.0:8050/dash/
+
+ * Serving Flask app 'app'
+ * Debug mode: on
+Failed to load dataset dataset_tyoungxx: name 'df' is not defined
+Failed to load dataset dataset_adisser17: name 'df' is not defined
+Failed to load dataset dataset_gzabinski23: name 'df' is not defined
+Failed to load dataset dataset_gpages22: name 'df' is not defined
+Failed to load dataset dataset_tyoungxx: name 'df' is not defined
+Failed to load dataset dataset_adisser17: name 'df' is not defined
+Failed to load dataset dataset_gzabinski23: name 'df' is not defined
+Failed to load dataset dataset_gpages22: name 'df' is not defined

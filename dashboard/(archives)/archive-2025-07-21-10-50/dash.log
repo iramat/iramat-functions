@@ -1,0 +1,5 @@
+nohup: ignoring input
+Traceback (most recent call last):
+  File "/home/ubuntu/dashboard/app.py", line 6, in <module>
+    from get_data import get_data
+ModuleNotFoundError: No module named 'get_data'

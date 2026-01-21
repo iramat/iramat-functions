@@ -1,0 +1,70 @@
+nohup: ignoring input
+Dash is running on http://0.0.0.0:8050/dash/
+
+ * Serving Flask app 'app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8050
+ * Running on http://157.136.252.188:8050
+Press CTRL+C to quit
+127.0.0.1 - - [21/Jul/2025 10:56:37] "GET /dash/dataset_tyoungxx HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:37] "GET /dash/_dash-component-suites/dash/deps/polyfill@7.v3_1_1m1752679977.12.1.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:37] "GET /dash/_dash-component-suites/dash/deps/react-dom@18.v3_1_1m1752679977.3.1.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:37] "GET /dash/_dash-component-suites/dash/deps/prop-types@15.v3_1_1m1752679977.8.1.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:37] "GET /dash/_dash-component-suites/dash/deps/react@18.v3_1_1m1752679977.3.1.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:37] "GET /dash/_dash-component-suites/dash/dcc/dash_core_components.v3_1_0m1752679977.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:37] "GET /dash/_dash-component-suites/dash/dash-renderer/build/dash_renderer.v3_1_1m1752679977.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:37] "GET /dash/_dash-component-suites/dash/dcc/dash_core_components-shared.v3_1_0m1752679977.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:37] "GET /dash/_dash-component-suites/dash/html/dash_html_components.v3_0_3m1752679977.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:37] "GET /dash/_dash-component-suites/dash/dash_table/bundle.v6_0_3m1752679977.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:38] "GET /dash/_dash-layout HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:38] "GET /dash/_dash-dependencies HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:38] "GET /dash/assets/logo.ico?m=1752741910.1523886 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:38] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:38] "GET /dash/_dash-component-suites/dash/dcc/async-graph.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:38] "GET /dash/_dash-component-suites/plotly/package_data/plotly.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:39] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:54] "GET /dash/dataset_adisser17 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:54] "GET /dash/_dash-layout HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:54] "GET /dash/_dash-dependencies HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:54] "GET /dash/assets/logo.ico?m=1752741910.1523886 HTTP/1.1" 304 -
+127.0.0.1 - - [21/Jul/2025 10:56:54] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:54] "GET /dash/_dash-component-suites/dash/dcc/async-graph.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:54] "GET /dash/_dash-component-suites/plotly/package_data/plotly.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:54] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:57] "GET /dash/dataset_gzabinski23 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:57] "GET /dash/_dash-layout HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:57] "GET /dash/_dash-dependencies HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:57] "GET /dash/assets/logo.ico?m=1752741910.1523886 HTTP/1.1" 304 -
+127.0.0.1 - - [21/Jul/2025 10:56:57] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:57] "GET /dash/_dash-component-suites/dash/dcc/async-graph.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:57] "GET /dash/_dash-component-suites/plotly/package_data/plotly.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:56:58] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:57:01] "GET /dash/dataset_gpages22 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:57:01] "GET /dash/_dash-layout HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:57:01] "GET /dash/_dash-dependencies HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:57:01] "GET /dash/assets/logo.ico?m=1752741910.1523886 HTTP/1.1" 304 -
+127.0.0.1 - - [21/Jul/2025 10:57:01] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:57:01] "GET /dash/_dash-component-suites/dash/dcc/async-graph.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:57:01] "GET /dash/_dash-component-suites/plotly/package_data/plotly.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:57:02] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:57:08] "GET /dash/dataset_gzabinski23 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:57:08] "GET /dash/_dash-layout HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:57:08] "GET /dash/_dash-dependencies HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:57:08] "GET /dash/assets/logo.ico?m=1752741910.1523886 HTTP/1.1" 304 -
+127.0.0.1 - - [21/Jul/2025 10:57:08] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:57:08] "GET /dash/_dash-component-suites/dash/dcc/async-graph.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:57:08] "GET /dash/_dash-component-suites/plotly/package_data/plotly.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:57:09] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:58:27] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:58:27] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:58:28] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:58:29] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:58:33] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:58:36] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:58:40] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:58:40] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:58:42] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:58:43] "POST /dash/_dash-update-component HTTP/1.1" 200 -
+127.0.0.1 - - [21/Jul/2025 10:58:44] "POST /dash/_dash-update-component HTTP/1.1" 200 -

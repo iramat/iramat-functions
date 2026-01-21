@@ -1,0 +1,65 @@
+nohup: ignoring input
+/home/ubuntu/dashboard/app.py:31: FutureWarning: DataFrame.applymap has been deprecated. Use DataFrame.map instead.
+  df_log10 = ordered_df.applymap(safe_log10)
+Dash is running on http://0.0.0.0:8050/dash/
+
+ * Serving Flask app 'app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8050
+ * Running on http://157.136.252.188:8050
+Press CTRL+C to quit
+127.0.0.1 - - [09/Jul/2025 08:59:23] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 08:59:27] "GET /_dash-layout HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 08:59:27] "GET /_dash-dependencies HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 08:59:27] "GET /_favicon.ico?v=3.1.1 HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 08:59:27] "GET /_dash-component-suites/dash/dcc/async-graph.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 08:59:28] "GET /_dash-component-suites/plotly/package_data/plotly.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 08:59:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 08:59:45] "GET /_dash-dependencies HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 08:59:45] "GET /_dash-layout HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 08:59:46] "GET /_favicon.ico?v=3.1.1 HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 08:59:46] "GET /_dash-component-suites/dash/dcc/async-graph.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 08:59:46] "GET /_dash-component-suites/plotly/package_data/plotly.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:00:09] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:00:10] "GET /_dash-dependencies HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:00:10] "GET /_dash-layout HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:00:10] "GET /_favicon.ico?v=3.1.1 HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:00:10] "GET /_dash-component-suites/dash/dcc/async-graph.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:00:10] "GET /_dash-component-suites/plotly/package_data/plotly.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:22:12] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:22:12] "GET /_dash-component-suites/dash/deps/polyfill@7.v3_1_1m1752048737.12.1.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:22:12] "GET /_dash-component-suites/dash/deps/react@18.v3_1_1m1752048738.3.1.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:22:12] "GET /_dash-component-suites/dash/deps/react-dom@18.v3_1_1m1752048738.3.1.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:22:12] "GET /_dash-component-suites/dash/deps/prop-types@15.v3_1_1m1752048737.8.1.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:22:12] "GET /_dash-component-suites/dash/dash-renderer/build/dash_renderer.v3_1_1m1752048737.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:22:12] "GET /_dash-component-suites/dash/dcc/dash_core_components.v3_1_0m1752048737.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:22:12] "GET /_dash-component-suites/dash/dcc/dash_core_components-shared.v3_1_0m1752048737.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:22:13] "GET /_dash-component-suites/dash/html/dash_html_components.v3_0_3m1752048738.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:22:13] "GET /_dash-component-suites/dash/dash_table/bundle.v6_0_3m1752048737.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:22:13] "GET /_dash-dependencies HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:22:13] "GET /_dash-layout HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:22:13] "GET /_favicon.ico?v=3.1.1 HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:22:13] "GET /_dash-component-suites/dash/dcc/async-graph.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Jul/2025 09:22:13] "GET /_dash-component-suites/plotly/package_data/plotly.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:51:55] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:51:55] "GET /_dash-component-suites/dash/deps/polyfill@7.v3_1_1m1752048737.12.1.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:51:55] "GET /_dash-component-suites/dash/deps/react@18.v3_1_1m1752048738.3.1.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:51:55] "GET /_dash-component-suites/dash/deps/react-dom@18.v3_1_1m1752048738.3.1.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:51:55] "GET /_dash-component-suites/dash/deps/prop-types@15.v3_1_1m1752048737.8.1.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:51:55] "GET /_dash-component-suites/dash/dash-renderer/build/dash_renderer.v3_1_1m1752048737.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:51:55] "GET /_dash-component-suites/dash/dcc/dash_core_components-shared.v3_1_0m1752048737.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:51:55] "GET /_dash-component-suites/dash/dcc/dash_core_components.v3_1_0m1752048737.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:51:55] "GET /_dash-component-suites/dash/dash_table/bundle.v6_0_3m1752048737.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:51:55] "GET /_dash-component-suites/dash/html/dash_html_components.v3_0_3m1752048738.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:51:55] "GET /_dash-dependencies HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:51:55] "GET /_dash-layout HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:51:55] "GET /_favicon.ico?v=3.1.1 HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:51:55] "GET /_dash-component-suites/dash/dcc/async-graph.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:51:55] "GET /_dash-component-suites/plotly/package_data/plotly.min.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:54:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:54:31] "GET /_dash-dependencies HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:54:31] "GET /_dash-layout HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:54:31] "GET /_dash-component-suites/dash/dcc/async-graph.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 08:54:31] "GET /_dash-component-suites/plotly/package_data/plotly.min.js HTTP/1.1" 200 -
