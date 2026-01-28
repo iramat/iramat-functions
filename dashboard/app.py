@@ -146,15 +146,17 @@ def display_page(pathname, search):
                 html.Ul([
                     html.Li(html.A("🏠 Back to Home", href="/dash/")),
                     html.Hr(),
-                    *[
-                        html.Li(html.A(s, href=f"/dash/mapview?dataset={s}"))
-                        for s in dataset_slugs
-                    ]
+                    # *[
+                    #     html.Li(html.A(s, href=f"/dash/mapview?dataset={s}"))
+                    #     for s in dataset_slugs
+                    # ]
+                    html.Li(html.A("📈 Line Chart", href=f"/dash/{slug}")),
+                    html.Li(html.A("△ Ternary Plot", href=f"/dash/charttern/{slug}")), # TODO
                 ])
             ]),
             html.Div(style={'flex': '1', 'padding': '20px', 'height': '90vh'}, children=[
                 html.H3(slug),
-                html.A("📈 Line Chart", href=f"/dash/{slug}"), html.Span(" | "), html.A("△ Ternary Plot", href=f"/dash/charttern/{slug}"), # TODO
+                # html.A("📈 Line Chart", href=f"/dash/{slug}"), html.Span(" | "), html.A("△ Ternary Plot", href=f"/dash/charttern/{slug}"), # TODO
                 generate_one_dataset(df, slug, dataset_map)
             ])
         ])
@@ -282,7 +284,10 @@ def create_figure_linechart(dataset_url, log10=True, selected_sites=None):
         xaxis_title="Element",
         yaxis_title="Log10 Value" if log10 else "Original Value",
         height=600,
-        margin=dict(t=20, b=10, l=10, r=10)
+        margin=dict(t=20, 
+                    b=10, 
+                    l=10, 
+                    r=10)
     )
     
     ref_html = html.Div([
@@ -510,7 +515,10 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None, tern_ax
         fig.update_layout(
             title=f"Missing required columns for ternary: {', '.join(missing)}",
             height=600,
-            margin=dict(t=40, b=10, l=10, r=10),
+            margin=dict(t=50, 
+                        b=50, 
+                        l=50, 
+                        r=50),
         )
         ref_html = html.Div([
             html.Ul([
@@ -551,7 +559,10 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None, tern_ax
 
     fig.update_layout(
         height=600,
-        margin=dict(t=20, b=10, l=10, r=10),
+        margin=dict(t=50, 
+                    b=50, 
+                    l=50, 
+                    r=50),
         ternary=dict(
             sum=100,
             aaxis_title=f"{a_ox} (%)",
@@ -719,7 +730,7 @@ def generate_dataset_page_ternary(dataset_url, slug):
                             {"label": "FeO-K2O-P2O5", "value": "FeO_K2O_P2O5"},
                         ],
                         value="FeO_SiO2_Al2O3",  # default
-                        labelStyle={"display": "inline-block", "marginBottom": "10px"},
+                        labelStyle={"display": "block", "marginBottom": "10px"},
                     ),
                 ]),
 
