@@ -311,33 +311,169 @@ def create_figure_linechart(dataset_url, log10=True, selected_sites=None):
 
     return fig, ref_html
 
-def create_figure_ternary(dataset_url, log10=False, selected_sites=None):
-    """
-    Create a ternary plot (FeO / SiO2 / Al2O3) from a dataset, after converting elements -> oxides.
+# def create_figure_ternary(dataset_url, log10=False, selected_sites=None):
+#     """
+#     Create a ternary plot (FeO / SiO2 / Al2O3) from a dataset, after converting elements -> oxides.
 
-    Returns:
-        fig (plotly.graph_objects.Figure)
-        ref_html (dash.html.Div)
+#     Returns:
+#         fig (plotly.graph_objects.Figure)
+#         ref_html (dash.html.Div)
+#     """
+#     import pandas as pd
+#     import plotly.express as px
+#     from dash import html
+
+#     # --- Fetch data (same pattern as create_figure_linechart) ---
+#     result = get_data(dataset_url, df["url_reference"], log10=log10)
+#     df_data = result["data"].copy()
+
+#     # Optional filter by selected sites
+#     if selected_sites:
+#         df_data = df_data[df_data["site_name"].isin(selected_sites)].copy()
+
+#     # Build a nice hover label
+#     df_data["label"] = "<b>" + df_data["site_name"].astype(str) + "</b> - " + df_data["sample_name"].astype(str)
+
+#     # HTML-safe reference string
+#     refbib = html.A(df_data.at[df_data.index[0], "reference"], href=df_data.at[df_data.index[0], "url"], target="_blank")
+
+#     # === Element -> oxide conversion factors ===
+#     conversion_factors = {
+#         "Na": ("Na2O", 1.348),
+#         "Mg": ("MgO", 1.658),
+#         "Al": ("Al2O3", 1.889),
+#         "Si": ("SiO2", 2.139),
+#         "P":  ("P2O5", 2.291),
+#         "K":  ("K2O", 1.204),
+#         "Ca": ("CaO", 1.399),
+#         "Mn": ("MnO", 1.291),
+#         "Fe": ("FeO", 1.287),
+#     }
+
+#     # Convert available element columns to numeric and compute oxide columns
+#     oxide_data = {}
+#     for elem, (oxide_name, factor) in conversion_factors.items():
+#         if elem in df_data.columns:
+#             df_data[elem] = pd.to_numeric(df_data[elem], errors="coerce")
+#             oxide_data[oxide_name] = df_data[elem] * factor
+
+#     oxides_df = pd.DataFrame(oxide_data, index=df_data.index)
+#     merged_df = pd.concat([df_data, oxides_df], axis=1)
+
+#     # --- Require these for ternary ---
+#     required = ["FeO", "SiO2", "Al2O3"]
+#     missing = [c for c in required if c not in merged_df.columns]
+#     if missing:
+#         # Return an empty figure + helpful message
+#         import plotly.graph_objects as go
+#         fig = go.Figure()
+#         fig.update_layout(
+#             title=f"Missing required columns for ternary: {', '.join(missing)}",
+#             height=720
+#         )
+#         ref_html = html.Div([
+#             html.H4("Sources & References"),
+#             html.Ul([
+#                 html.Li([html.Span("API: "), html.A(dataset_url, href=dataset_url, target="_blank")]),
+#                 html.Li([html.Span("Data reference: "), refbib]),
+#             ]),
+#         ], style={"marginTop": "0px"})
+#         return fig, ref_html
+
+#     # Normalize FeO / SiO2 / Al2O3 to 100
+#     total = merged_df[required].sum(axis=1)
+#     merged_df = merged_df[total > 0].copy()  # avoid division by zero
+#     merged_df["FeO_pct"] = merged_df["FeO"] * 100.0 / merged_df[required].sum(axis=1)
+#     merged_df["SiO2_pct"] = merged_df["SiO2"] * 100.0 / merged_df[required].sum(axis=1)
+#     merged_df["Al2O3_pct"] = merged_df["Al2O3"] * 100.0 / merged_df[required].sum(axis=1)
+
+#     # --- Plotly ternary scatter ---
+#     # Build hover_data safely (ONLY existing columns)
+#     hover_data = {
+#         # "label": True,
+#         "FeO_pct": ":.2f",
+#         "SiO2_pct": ":.2f",
+#         "Al2O3_pct": ":.2f",
+#         # "site_name": True,
+#         # "sample_name": True,
+#     }
+
+#     # Add dataset ONLY if it exists
+#     if "dataset" in merged_df.columns:
+#         hover_data["dataset"] = True
+
+#     fig = px.scatter_ternary(
+#         merged_df,
+#         a="FeO_pct",
+#         b="SiO2_pct",
+#         c="Al2O3_pct",
+#         color="site_name",
+#         hover_name="label",
+#         hover_data=hover_data,
+#     )
+
+#     fig.update_layout(
+#         height=600,
+#         # margin=dict(t=20, b=10, l=10, r=10),
+#         ternary=dict(
+#             sum=100,
+#             aaxis_title="FeO (%)",
+#             baxis_title="SiO2 (%)",
+#             caxis_title="Al2O3 (%)",
+#         ),
+#         legend_title_text="site_name",
+#     )
+
+#     ref_html = html.Div([
+#         # html.H4("Sources & References"),
+#         html.Ul([
+#             html.Li([
+#                 html.Span("Reference: "),
+#                 refbib, html.Span("  "),
+#                 html.Img(
+#                         src="/dash/assets/lod-licences-cc-by.png",
+#                         style={
+#                             "height": "25px",
+#                             "verticalAlign": "middle",
+#                             "marginRight": "5px"
+#                             }
+#                          )
+#             ]),
+#             html.Li([
+#                 html.Span("Data: "), 
+#                 html.A("API", href=dataset_url, target="_blank"), 
+#                 html.Span(" | "), 
+#                 html.A("CSV", id='tern-download-csv-btn', n_clicks=0, href="#"), dcc.Download(id='tern-download-csv')
+#             ]),
+#         ])
+#     ], style={'marginTop': '0px'})
+
+#     return fig, ref_html
+
+def create_figure_ternary(dataset_url, log10=False, selected_sites=None, tern_axes="FeO_SiO2_Al2O3"):
+    """
+    Create a ternary plot from a dataset, after converting elements -> oxides.
+
+    tern_axes:
+      - "FeO_SiO2_Al2O3" (default)
+      - "FeO_MnO_CaO"
+      - "FeO_K2O_P2O5"
     """
     import pandas as pd
     import plotly.express as px
+    import plotly.graph_objects as go
     from dash import html
 
-    # --- Fetch data (same pattern as create_figure_linechart) ---
     result = get_data(dataset_url, df["url_reference"], log10=log10)
     df_data = result["data"].copy()
 
-    # Optional filter by selected sites
     if selected_sites:
         df_data = df_data[df_data["site_name"].isin(selected_sites)].copy()
 
-    # Build a nice hover label
     df_data["label"] = "<b>" + df_data["site_name"].astype(str) + "</b> - " + df_data["sample_name"].astype(str)
-
-    # HTML-safe reference string
     refbib = html.A(df_data.at[df_data.index[0], "reference"], href=df_data.at[df_data.index[0], "url"], target="_blank")
 
-    # === Element -> oxide conversion factors ===
+    # Element -> oxide conversion factors
     conversion_factors = {
         "Na": ("Na2O", 1.348),
         "Mg": ("MgO", 1.658),
@@ -350,7 +486,6 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None):
         "Fe": ("FeO", 1.287),
     }
 
-    # Convert available element columns to numeric and compute oxide columns
     oxide_data = {}
     for elem, (oxide_name, factor) in conversion_factors.items():
         if elem in df_data.columns:
@@ -360,53 +495,54 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None):
     oxides_df = pd.DataFrame(oxide_data, index=df_data.index)
     merged_df = pd.concat([df_data, oxides_df], axis=1)
 
-    # --- Require these for ternary ---
-    required = ["FeO", "SiO2", "Al2O3"]
+    # Map the radio selection to the 3 oxides
+    axes_map = {
+        "FeO_SiO2_Al2O3": ("FeO", "SiO2", "Al2O3"),
+        "FeO_MnO_CaO": ("FeO", "MnO", "CaO"),
+        "FeO_K2O_P2O5": ("FeO", "K2O", "P2O5"),
+    }
+    a_ox, b_ox, c_ox = axes_map.get(tern_axes, axes_map["FeO_SiO2_Al2O3"])
+
+    required = [a_ox, b_ox, c_ox]
     missing = [c for c in required if c not in merged_df.columns]
     if missing:
-        # Return an empty figure + helpful message
-        import plotly.graph_objects as go
         fig = go.Figure()
         fig.update_layout(
             title=f"Missing required columns for ternary: {', '.join(missing)}",
-            height=720
+            height=600,
+            margin=dict(t=40, b=10, l=10, r=10),
         )
         ref_html = html.Div([
-            html.H4("Sources & References"),
             html.Ul([
-                html.Li([html.Span("API: "), html.A(dataset_url, href=dataset_url, target="_blank")]),
-                html.Li([html.Span("Data reference: "), refbib]),
-            ]),
-        ], style={"marginTop": "0px"})
+                html.Li([html.Span("Reference: "), refbib]),
+                html.Li([html.Span("Data: "), html.A("API", href=dataset_url, target="_blank")]),
+            ])
+        ])
         return fig, ref_html
 
-    # Normalize FeO / SiO2 / Al2O3 to 100
+    # Normalize the chosen oxides to 100
     total = merged_df[required].sum(axis=1)
-    merged_df = merged_df[total > 0].copy()  # avoid division by zero
-    merged_df["FeO_pct"] = merged_df["FeO"] * 100.0 / merged_df[required].sum(axis=1)
-    merged_df["SiO2_pct"] = merged_df["SiO2"] * 100.0 / merged_df[required].sum(axis=1)
-    merged_df["Al2O3_pct"] = merged_df["Al2O3"] * 100.0 / merged_df[required].sum(axis=1)
+    merged_df = merged_df[total > 0].copy()
 
-    # --- Plotly ternary scatter ---
-    # Build hover_data safely (ONLY existing columns)
+    a_pct = f"{a_ox}_pct"
+    b_pct = f"{b_ox}_pct"
+    c_pct = f"{c_ox}_pct"
+
+    merged_df[a_pct] = merged_df[a_ox] * 100.0 / merged_df[required].sum(axis=1)
+    merged_df[b_pct] = merged_df[b_ox] * 100.0 / merged_df[required].sum(axis=1)
+    merged_df[c_pct] = merged_df[c_ox] * 100.0 / merged_df[required].sum(axis=1)
+
     hover_data = {
-        # "label": True,
-        "FeO_pct": ":.2f",
-        "SiO2_pct": ":.2f",
-        "Al2O3_pct": ":.2f",
-        # "site_name": True,
-        # "sample_name": True,
+        a_pct: ":.2f",
+        b_pct: ":.2f",
+        c_pct: ":.2f",
     }
-
-    # Add dataset ONLY if it exists
-    if "dataset" in merged_df.columns:
-        hover_data["dataset"] = True
 
     fig = px.scatter_ternary(
         merged_df,
-        a="FeO_pct",
-        b="SiO2_pct",
-        c="Al2O3_pct",
+        a=a_pct,
+        b=b_pct,
+        c=c_pct,
         color="site_name",
         hover_name="label",
         hover_data=hover_data,
@@ -414,41 +550,38 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None):
 
     fig.update_layout(
         height=600,
-        # margin=dict(t=20, b=10, l=10, r=10),
+        margin=dict(t=20, b=10, l=10, r=10),
         ternary=dict(
             sum=100,
-            aaxis_title="FeO (%)",
-            baxis_title="SiO2 (%)",
-            caxis_title="Al2O3 (%)",
+            aaxis_title=f"{a_ox} (%)",
+            baxis_title=f"{b_ox} (%)",
+            caxis_title=f"{c_ox} (%)",
         ),
         legend_title_text="site_name",
     )
 
     ref_html = html.Div([
-        # html.H4("Sources & References"),
         html.Ul([
             html.Li([
                 html.Span("Reference: "),
                 refbib, html.Span("  "),
                 html.Img(
-                        src="/dash/assets/lod-licences-cc-by.png",
-                        style={
-                            "height": "25px",
-                            "verticalAlign": "middle",
-                            "marginRight": "5px"
-                            }
-                         )
+                    src="/dash/assets/lod-licences-cc-by.png",
+                    style={"height": "25px", "verticalAlign": "middle", "marginRight": "5px"}
+                )
             ]),
             html.Li([
-                html.Span("Data: "), 
-                html.A("API", href=dataset_url, target="_blank"), 
-                html.Span(" | "), 
-                html.A("CSV", id='tern-download-csv-btn', n_clicks=0, href="#"), dcc.Download(id='tern-download-csv')
+                html.Span("Data: "),
+                html.A("API", href=dataset_url, target="_blank"),
+                html.Span(" | "),
+                html.A("CSV", id="tern-download-csv-btn", n_clicks=0, href="#"),
+                dcc.Download(id="tern-download-csv"),
             ]),
         ])
-    ], style={'marginTop': '0px'})
+    ], style={"marginTop": "0px"})
 
     return fig, ref_html
+
 
 def generate_dataset_page(dataset_url, slug):
     """Generate the Line Chart view of a dataset"""
@@ -577,6 +710,16 @@ def generate_dataset_page_ternary(dataset_url, slug):
                 html.Div(style={'flex': '1', 'paddingRight': '20px'}, children=[
                     # html.H3(f"{dataset_name}", style={"marginBottom": "20px"}),
                     dcc.Store(id='tern-current-dataset-url', data=dataset_url),
+                    dcc.RadioItems(
+                        id="tern-axes-selector",
+                        options=[
+                            {"label": "FeO-SiO2-Al2O3", "value": "FeO_SiO2_Al2O3"},
+                            {"label": "FeO-MnO-CaO", "value": "FeO_MnO_CaO"},
+                            {"label": "FeO-K2O-P2O5", "value": "FeO_K2O_P2O5"},
+                        ],
+                        value="FeO_SiO2_Al2O3",  # default
+                        labelStyle={"display": "inline-block", "marginBottom": "10px"},
+                    ),
                 ]),
 
                 # # Middle: CSV download of *selected sites data* (optional)
@@ -595,7 +738,6 @@ def generate_dataset_page_ternary(dataset_url, slug):
                     html.Div(id='tern-reference-info'),
                 ])
             ]),
-
             dcc.Graph(id='ternary-graph')
         ])
     ])
@@ -614,16 +756,33 @@ def update_graph(scale_mode, dataset_url, selected_sites):
     fig, ref_html = create_figure_linechart(dataset_url, log10=log10, selected_sites=selected_sites)
     return fig, ref_html
 
+# @app.callback(
+#     Output('ternary-graph', 'figure'),
+#     Output('tern-reference-info', 'children'),
+#     Input('tern-current-dataset-url', 'data'),
+#     Input('tern-site-filter', 'value'),
+# )
+# def update_ternary_graph(dataset_url, selected_sites):
+#     """Update the ternary chart"""
+#     fig, ref_html = create_figure_ternary(dataset_url, log10=False, selected_sites=selected_sites)
+#     return fig, ref_html
+
 @app.callback(
-    Output('ternary-graph', 'figure'),
-    Output('tern-reference-info', 'children'),
-    Input('tern-current-dataset-url', 'data'),
-    Input('tern-site-filter', 'value'),
+    Output("ternary-graph", "figure"),
+    Output("tern-reference-info", "children"),
+    Input("tern-current-dataset-url", "data"),
+    Input("tern-site-filter", "value"),
+    Input("tern-axes-selector", "value"),   # NEW
 )
-def update_ternary_graph(dataset_url, selected_sites):
-    """Update the ternary chart"""
-    fig, ref_html = create_figure_ternary(dataset_url, log10=False, selected_sites=selected_sites)
+def update_ternary_graph(dataset_url, selected_sites, tern_axes):
+    fig, ref_html = create_figure_ternary(
+        dataset_url,
+        log10=False,
+        selected_sites=selected_sites,
+        tern_axes=tern_axes,                # NEW
+    )
     return fig, ref_html
+
 
 @app.callback(
     Output('site-filter', 'options'),
