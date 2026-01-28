@@ -536,6 +536,7 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None, tern_ax
         a_pct: ":.2f",
         b_pct: ":.2f",
         c_pct: ":.2f",
+        "typology": True,
     }
 
     fig = px.scatter_ternary(
@@ -704,51 +705,23 @@ def generate_dataset_page_ternary(dataset_url, slug):
         # Main Content
         html.Div(style={'flex': '1', 'padding': '10px'}, children=[
 
-            html.Div(style={
-                        "display": "flex",
-                        "gap": "16px",
-                        "alignItems": "flex-start",
-                        "flexWrap": "wrap",          # allows radio to drop under title if needed
-                    }, children=[
+            html.Div(style={'display': 'flex', 'justifyContent': 'space-between'}, children=[
+
                 # # Left: title + store
-                # html.Div(style={'flex': '1', 'paddingRight': '20px'}, children=[
-                #     # html.H3(f"{dataset_name}", style={"marginBottom": "20px"}),
-                #     dcc.Store(id='tern-current-dataset-url', data=dataset_url),
-                #     dcc.RadioItems(
-                #         id="tern-axes-selector",
-                #         options=[
-                #             {"label": "FeO-SiO2-Al2O3", "value": "FeO_SiO2_Al2O3"},
-                #             {"label": "FeO-MnO-CaO", "value": "FeO_MnO_CaO"},
-                #             {"label": "FeO-K2O-P2O5", "value": "FeO_K2O_P2O5"},
-                #         ],
-                #         value="FeO_SiO2_Al2O3",  # default
-                #         labelStyle={"display": "block", "marginBottom": "10px"},
-                #     ),
-                # ]),
-                html.Div(
-                    style={
-                        "flex": "1 1 420px",     # grow/shrink but start at ~420px
-                        "minWidth": "380px",     # prevents it from collapsing
-                        "paddingRight": "20px",
-                    },
-                    children=[
-                        html.H3(f"{dataset_name} — Ternary", style={"marginBottom": "10px"}),
-
-                        dcc.Store(id="tern-current-dataset-url", data=dataset_url),
-
-                        dcc.RadioItems(
-                            id="tern-axes-selector",
-                            options=[
-                                {"label": "FeO – SiO2 – Al2O3", "value": "FeO_SiO2_Al2O3"},
-                                {"label": "FeO – MnO – CaO", "value": "FeO_MnO_CaO"},
-                                {"label": "FeO – K2O – P2O5", "value": "FeO_K2O_P2O5"},
-                            ],
-                            value="FeO_SiO2_Al2O3",
-                            inline=True,  # nicer in a header
-                            style={"marginTop": "6px"},
-                        ),
-                    ]
-                ),
+                html.Div(style={'flex': '1', 'paddingRight': '20px'}, children=[
+                    # html.H3(f"{dataset_name}", style={"marginBottom": "20px"}),
+                    dcc.Store(id='tern-current-dataset-url', data=dataset_url),
+                    dcc.RadioItems(
+                        id="tern-axes-selector",
+                        options=[
+                            {"label": "FeO-SiO2-Al2O3", "value": "FeO_SiO2_Al2O3"},
+                            {"label": "FeO-MnO-CaO", "value": "FeO_MnO_CaO"},
+                            {"label": "FeO-K2O-P2O5", "value": "FeO_K2O_P2O5"},
+                        ],
+                        value="FeO_SiO2_Al2O3",  # default
+                        labelStyle={"display": "inline-block", "marginBottom": "10px"},
+                    ),
+                ]),
 
                 # # Middle: CSV download of *selected sites data* (optional)
                 # html.Div(style={'paddingRight': '20px'}, children=[
@@ -762,18 +735,9 @@ def generate_dataset_page_ternary(dataset_url, slug):
                 # ]),
 
                 # Right: references
-                html.Div(
-                    style={
-                        "flex": "2 1 520px",
-                        "minWidth": "320px",
-                        "maxWidth": "100%",
-                        "overflowWrap": "anywhere",  # long URLs won't force huge width
-                    },
-                    children=[html.Div(id="tern-reference-info")]
-                )
-                # html.Div(style={'flex': '2'}, children=[
-                #     html.Div(id='tern-reference-info'),
-                # ])
+                html.Div(style={'flex': '2'}, children=[
+                    html.Div(id='tern-reference-info'),
+                ])
             ]),
             dcc.Graph(id='ternary-graph')
         ])
