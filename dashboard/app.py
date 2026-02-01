@@ -109,8 +109,8 @@ app.layout = html.Div([
     Input('url', 'pathname'),
     State('url', 'search')
 )
-
-def display_page(pathname, search):
+def generate_dataset_map(pathname, search):
+# def display_page(pathname, search):
     # Remove '/dash/' prefix to isolate the slug
     path = pathname.replace('/dash/', '').strip('/')
     
@@ -894,6 +894,8 @@ def download_tern_csv(n_clicks, dataset_url, selected_sites):
 
 # ----------- RUN SERVER ---------------- #
 
+debug = True # Set to True for debugging
+
 if __name__ == '__main__':
     # app.run(debug=True, host='0.0.0.0', port=8050)
-    app.run(debug=True, host="127.0.0.1", port=8050)
+    app.run(debug=debug, host="127.0.0.1", port=8050)
