@@ -72,23 +72,36 @@ app.index_string = '''
 '''
 
 app.title = tit
-# app.favicon = ("logo.ico")
 # app.layout = html.Div([
 #     dcc.Location(id='url', refresh=False),
-#     html.Div(id='page-content')
+#     html.Div(
+#         id='page-content',
+#         style={
+#             'display': 'flex',
+#             'flexDirection': 'column',
+#             'flex': '1',
+#             'height': '100vh'   # full screen height
+#         }
+#     )
 # ])
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
-    html.Div(
-        id='page-content',
-        style={
-            'display': 'flex',
-            'flexDirection': 'column',
-            'flex': '1',
-            'height': '100vh'   # full screen height
-        }
+
+    dcc.Loading(
+        id="page-loading",
+        type="default",   # "circle", "cube", "dot" also available
+        children=html.Div(
+            id='page-content',
+            style={
+                'display': 'flex',
+                'flexDirection': 'column',
+                'flex': '1',
+                'height': '100vh'
+            }
+        )
     )
 ])
+
 
 
 @app.callback(
@@ -142,14 +155,10 @@ def display_page(pathname, search):
         slug = search.split('=')[-1]
         return html.Div(style={'display': 'flex'}, children=[
             html.Div(style={'width': '200px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
-                html.H2("Dataset List"),
+                html.H2("CHIPS Dataset"),
                 html.Ul([
                     html.Li(html.A("🏠 Back to Home", href="/dash/")),
                     html.Hr(),
-                    # *[
-                    #     html.Li(html.A(s, href=f"/dash/mapview?dataset={s}"))
-                    #     for s in dataset_slugs
-                    # ]
                     html.Li(html.A("📈 Line Chart", href=f"/dash/{slug}")),
                     html.Li(html.A("△ Ternary Plot", href=f"/dash/charttern/{slug}")), # TODO
                 ])
@@ -672,7 +681,11 @@ def generate_dataset_page(dataset_url, slug):
             ]),
 
             # Graph goes below the 2-column block
-            dcc.Graph(id='dataset-graph')
+            # dcc.Graph(id='dataset-graph')
+            dcc.Loading(
+                type="default",
+                children=dcc.Graph(id='dataset-graph')
+            )
         ])
     ])
 
@@ -750,7 +763,11 @@ def generate_dataset_page_ternary(dataset_url, slug):
                     html.Div(id='tern-reference-info'),
                 ])
             ]),
-            dcc.Graph(id='ternary-graph')
+            # dcc.Graph(id='ternary-graph')
+            dcc.Loading(
+                type="default",
+                children=dcc.Graph(id='ternary-graph')
+            )
         ])
     ])
 
