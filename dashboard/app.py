@@ -117,7 +117,43 @@ def generate_dataset_map(pathname, search):
     if path == "" or path == "index":
         return html.Div(style={'display': 'flex'}, children=[
                 html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
-                html.H2("Welcome"),
+                # html.H2("Welcome"),
+                html.Div([
+                    html.H2("Welcome to CHIPS ", style={"margin": "0", "marginRight": "10px"}),
+                    html.A(
+                        children=[
+                            html.Img(
+                                src="/dash/assets/logo-chips-round.png",
+                                style={
+                                    "height": "40px", # Adjusted to match H2 better
+                                    "verticalAlign": "middle",
+                                }
+                            ),
+                        ],
+                        href="https://iramat.github.io/chips/",
+                        target="_blank",
+                        style={"display": "flex", "alignItems": "center"}
+                    )
+                ], style={"display": "flex", "alignItems": "center"}),
+                # html.P([
+                #     html.H2("Welcome to CHIPS "),
+                #         html.A(
+                #             children=[
+                #                 html.Img(
+                #                     src="/dash/assets/logo-chips-round.png",
+                #                     style={
+                #                         "height": "25px",
+                #                         "verticalAlign": "middle",
+                #                         "marginRight": "5px"
+                #                     }
+                #                 ),
+                #                 ""
+                #             ],
+                #             href="https://iramat.github.io/chips/",
+                #             target="_blank",
+                #             style={"textDecoration": "none", "color": "black"}
+                #         )
+                #     ]),
                 html.P([
                         "This dashboard helps exploring The CHIPS Database. See also ",
                         # html.A("GitHub", 
