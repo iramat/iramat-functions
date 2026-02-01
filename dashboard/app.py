@@ -162,7 +162,44 @@ def generate_dataset_map(pathname, search):
             ]),
             html.Div(style={'flex': '1', 'padding': '20px', 'height': '90vh'}, children=[
                 generate_all_datasets_map(df = df, dataset_map = dataset_map, dataset_slugs = dataset_slugs, coloramp=coloramp_all_dataset_map)
-            ])
+            ]),
+            # Right panel (NEW)
+            html.Div(
+                style={
+                    "width": "220px",
+                    "padding": "20px",
+                    "backgroundColor": "#f7f7f7",
+                    "borderLeft": "1px solid #ddd",
+                },
+                children=[
+                    html.H4("Overview"),
+                    html.Div([
+                        html.Strong("Datasets: "), 
+                        f"{len(dataset_slugs):,}",
+                        # TODO: total samples and columns across all datasets?
+                        # html.Br(),
+                        # html.Strong("Columns: "),
+                        # f"{len(df.columns) if hasattr(df, 'columns') else len(df.keys()):,}",
+                    ]),
+                ],
+            )
+
+            # html.Div(
+            #     style={
+            #         "width": "220px",
+            #         "padding": "20px",
+            #         "backgroundColor": "#f7f7f7",
+            #         "borderLeft": "1px solid #ddd",
+            #     },
+            #     children=[
+            #         html.H4("Overview"),
+            #         html.Div([
+            #             html.Strong("Datasets: "), f"{len(df):,}",
+            #             html.Br(),
+            #             html.Strong("Columns: "), f"{len(df.columns)}",
+            #         ]),
+            #     ],
+            # )
         ])
 
     if path == "mapview" and search:
@@ -212,8 +249,13 @@ def generate_dataset_map(pathname, search):
                 children=[
                     html.H4("Dataset info"),
                     html.Div("Loading…", id="map-row-count"),
-                    dcc.Store(id="map-current-dataset-url", data=dataset_url)
                 ]
+
+                # children=[
+                #     html.H4("Dataset info"),
+                #     html.Div("Loading…", id="map-row-count"),
+                #     dcc.Store(id="map-current-dataset-url", data=dataset_url)
+                # ]
             )
         ])
         
@@ -813,4 +855,4 @@ debug = True # Set to True for debugging
 
 if __name__ == '__main__':
     # app.run(debug=True, host='0.0.0.0', port=8050)
-    app.run(debug=debug, host="127.0.0.1", port=8050)
+    app.run(debug=debug, host="127.0.0.1", port=8051)
