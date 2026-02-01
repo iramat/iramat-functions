@@ -102,8 +102,6 @@ app.layout = html.Div([
     )
 ])
 
-
-
 @app.callback(
     Output('page-content', 'children'),
     Input('url', 'pathname'),
@@ -135,27 +133,8 @@ def generate_dataset_map(pathname, search):
                         style={"display": "flex", "alignItems": "center"}
                     )
                 ], style={"display": "flex", "alignItems": "center"}),
-                # html.P([
-                #     html.H2("Welcome to CHIPS "),
-                #         html.A(
-                #             children=[
-                #                 html.Img(
-                #                     src="/dash/assets/logo-chips-round.png",
-                #                     style={
-                #                         "height": "25px",
-                #                         "verticalAlign": "middle",
-                #                         "marginRight": "5px"
-                #                     }
-                #                 ),
-                #                 ""
-                #             ],
-                #             href="https://iramat.github.io/chips/",
-                #             target="_blank",
-                #             style={"textDecoration": "none", "color": "black"}
-                #         )
-                #     ]),
                 html.P([
-                        "This dashboard helps exploring The CHIPS Database. See also ",
+                        "This dashboard helps exploring the CHIPS Database. Only a part of the whole database is made public. See also ",
                         # html.A("GitHub", 
                         #        href="https://github.com/iramat/chips",
                         #        target="_blank")
@@ -164,7 +143,7 @@ def generate_dataset_map(pathname, search):
                                 html.Img(
                                     src="/dash/assets/app-github.png",
                                     style={
-                                        "height": "25px",
+                                        "height": "20px",
                                         "verticalAlign": "middle",
                                         "marginRight": "5px"
                                     }
@@ -189,12 +168,30 @@ def generate_dataset_map(pathname, search):
     if path == "mapview" and search:
         # for each dataset
         slug = search.split('=')[-1]
+        
+        # HERE
+        dataset_url = dataset_map.get(slug) # Data:
+
         return html.Div(style={'display': 'flex'}, children=[
             html.Div(style={'width': '200px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
                 html.H2("CHIPS Dataset"),
+                html.P(html.A("🏠 Back to Home", href="/dash/")),
+                # html.Hr(),
+                html.H3(f"{slug}"),
                 html.Ul([
-                    html.Li(html.A("🏠 Back to Home", href="/dash/")),
-                    html.Hr(),
+                    html.H3("Data"),
+                    
+                    # HERE
+                    
+                    html.Li(html.A("API", href=dataset_url, target="_blank")),
+                    html.Li(html.A("CSV", id="map-download-csv-btn", n_clicks=0, href="#")),
+                    # dcc.Download(id="tern-download-csv"),   
+                    dcc.Store(id="map-current-dataset-url", data=dataset_url),
+                    dcc.Store(id="map-current-slug", data=slug),
+                    dcc.Download(id="map-download-csv"),
+                    
+                    ##
+                    
                     html.Li(html.A("📈 Line Chart", href=f"/dash/{slug}")),
                     html.Li(html.A("△ Ternary Plot", href=f"/dash/charttern/{slug}")), # TODO
                 ])
@@ -203,7 +200,21 @@ def generate_dataset_map(pathname, search):
                 html.H3(slug),
                 # html.A("📈 Line Chart", href=f"/dash/{slug}"), html.Span(" | "), html.A("△ Ternary Plot", href=f"/dash/charttern/{slug}"), # TODO
                 generate_one_dataset(df, slug, dataset_map)
-            ])
+            ]),
+            # RIGHT stats panel (NEW)
+            html.Div(
+                style={
+                    "width": "220px",
+                    "padding": "20px",
+                    "backgroundColor": "#f7f7f7",
+                    "borderLeft": "1px solid #ddd"
+                },
+                children=[
+                    html.H4("Dataset info"),
+                    html.Div("Loading…", id="map-row-count"),
+                    dcc.Store(id="map-current-dataset-url", data=dataset_url)
+                ]
+            )
         ])
         
     # --- Ternary chart view: /dash/charttern/<slug> ---
@@ -233,61 +244,42 @@ def generate_dataset_map(pathname, search):
         html.H2("404 - Page not found"),
         html.P(f"No dataset or route found for: {pathname}")
     ])
+        
+@app.callback(
+    Output("map-row-count", "children"),
+    Input("map-current-dataset-url", "data")
+)
+def update_map_row_count(dataset_url):
+    if not dataset_url:
+        return ""
 
-# def create_figure_linechart(dataset_url, log10=True, selected_sites=None):
-#     result = get_data(dataset_url, df["url_reference"], log10=log10)
-#     df_elt = result["elements"]
-#     df_data = result["data"]
-#     df_data['label'] = '<b>' + df_data['site_name'] + '</b>' + " - " + df_data['sample_name']
+    result = get_data(dataset_url, df["url_reference"], log10=False)
+    df_data = result["data"]
 
-#     # HTML-safe reference string
-#     refbib = html.A(df_data.at[0, 'reference'], href=df_data.at[0, 'url'], target='_blank')
+    return html.Div([
+        html.Strong("Samples: "),
+        f"{len(df_data):,}",
+        html.Br(),
+        html.Strong("Sites: "),
+        f"{df_data['site_name'].nunique()}"
+    ])
 
-#     fig = go.Figure()
+@app.callback(
+    Output("map-download-csv", "data"),
+    Input("map-download-csv-btn", "n_clicks"),
+    State("map-current-dataset-url", "data"),
+    State("map-current-slug", "data"),
+    prevent_initial_call=True
+)
+def download_map_csv(n_clicks, dataset_url, slug):
+    result = get_data(dataset_url, df["url_reference"], log10=False)
+    df_data = result["data"]
+    return dcc.send_data_frame(
+        df_data.to_csv,
+        f"chips_{slug}_data.csv",
+        index=False
+    )
 
-#     for idx, row in df_elt.iterrows():
-#         site = df_data.loc[idx, 'site_name']
-#         if selected_sites and site not in selected_sites:
-#             continue
-
-#         label = df_data.loc[idx, 'label']
-#         customdata = [[label] for _ in df_elt.columns]
-
-#         fig.add_trace(go.Scatter(
-#             x=df_elt.columns,
-#             y=row.values,
-#             mode='lines+markers',
-#             customdata=customdata,
-#             hovertemplate='%{customdata[0]}<br><b>elt</b>: %{x} | <b>val</b>: %{y:.3f}<extra></extra>',
-#             name=label
-#         ))
-
-#     # dataset_name = re.search(r'[^/]+$', dataset_url).group()
-#     y_title = "Log10 Value" if log10 else "Original Value"
-
-#     fig.update_layout(
-#         xaxis_title="Element",
-#         yaxis_title=y_title,
-#         height=720
-#     )
-
-#     # HTML layout for references
-#     ref_html = html.Div([
-#         html.H4("Sources & References"),
-#         html.Ul([
-#             html.Li([
-#                 html.Span("API (data source): "),
-#                 html.A(dataset_url, href=dataset_url, target='_blank')
-#             ]),
-#             html.Li([
-#                 html.Span("Data reference: "),
-#                 refbib
-#             ])
-#         ])
-#     # ], style={'marginTop': '0px', 'height': '80vh'})
-#     ], style={'marginTop': '0px'})
-
-#     return fig, ref_html
 
 def create_figure_linechart(dataset_url, log10=True, selected_sites=None):
     result = get_data(dataset_url, df["url_reference"], log10=log10)
@@ -360,145 +352,6 @@ def create_figure_linechart(dataset_url, log10=True, selected_sites=None):
     ], style={'marginTop': '0px'})
 
     return fig, ref_html
-
-# def create_figure_ternary(dataset_url, log10=False, selected_sites=None):
-#     """
-#     Create a ternary plot (FeO / SiO2 / Al2O3) from a dataset, after converting elements -> oxides.
-
-#     Returns:
-#         fig (plotly.graph_objects.Figure)
-#         ref_html (dash.html.Div)
-#     """
-#     import pandas as pd
-#     import plotly.express as px
-#     from dash import html
-
-#     # --- Fetch data (same pattern as create_figure_linechart) ---
-#     result = get_data(dataset_url, df["url_reference"], log10=log10)
-#     df_data = result["data"].copy()
-
-#     # Optional filter by selected sites
-#     if selected_sites:
-#         df_data = df_data[df_data["site_name"].isin(selected_sites)].copy()
-
-#     # Build a nice hover label
-#     df_data["label"] = "<b>" + df_data["site_name"].astype(str) + "</b> - " + df_data["sample_name"].astype(str)
-
-#     # HTML-safe reference string
-#     refbib = html.A(df_data.at[df_data.index[0], "reference"], href=df_data.at[df_data.index[0], "url"], target="_blank")
-
-#     # === Element -> oxide conversion factors ===
-#     conversion_factors = {
-#         "Na": ("Na2O", 1.348),
-#         "Mg": ("MgO", 1.658),
-#         "Al": ("Al2O3", 1.889),
-#         "Si": ("SiO2", 2.139),
-#         "P":  ("P2O5", 2.291),
-#         "K":  ("K2O", 1.204),
-#         "Ca": ("CaO", 1.399),
-#         "Mn": ("MnO", 1.291),
-#         "Fe": ("FeO", 1.287),
-#     }
-
-#     # Convert available element columns to numeric and compute oxide columns
-#     oxide_data = {}
-#     for elem, (oxide_name, factor) in conversion_factors.items():
-#         if elem in df_data.columns:
-#             df_data[elem] = pd.to_numeric(df_data[elem], errors="coerce")
-#             oxide_data[oxide_name] = df_data[elem] * factor
-
-#     oxides_df = pd.DataFrame(oxide_data, index=df_data.index)
-#     merged_df = pd.concat([df_data, oxides_df], axis=1)
-
-#     # --- Require these for ternary ---
-#     required = ["FeO", "SiO2", "Al2O3"]
-#     missing = [c for c in required if c not in merged_df.columns]
-#     if missing:
-#         # Return an empty figure + helpful message
-#         import plotly.graph_objects as go
-#         fig = go.Figure()
-#         fig.update_layout(
-#             title=f"Missing required columns for ternary: {', '.join(missing)}",
-#             height=720
-#         )
-#         ref_html = html.Div([
-#             html.H4("Sources & References"),
-#             html.Ul([
-#                 html.Li([html.Span("API: "), html.A(dataset_url, href=dataset_url, target="_blank")]),
-#                 html.Li([html.Span("Data reference: "), refbib]),
-#             ]),
-#         ], style={"marginTop": "0px"})
-#         return fig, ref_html
-
-#     # Normalize FeO / SiO2 / Al2O3 to 100
-#     total = merged_df[required].sum(axis=1)
-#     merged_df = merged_df[total > 0].copy()  # avoid division by zero
-#     merged_df["FeO_pct"] = merged_df["FeO"] * 100.0 / merged_df[required].sum(axis=1)
-#     merged_df["SiO2_pct"] = merged_df["SiO2"] * 100.0 / merged_df[required].sum(axis=1)
-#     merged_df["Al2O3_pct"] = merged_df["Al2O3"] * 100.0 / merged_df[required].sum(axis=1)
-
-#     # --- Plotly ternary scatter ---
-#     # Build hover_data safely (ONLY existing columns)
-#     hover_data = {
-#         # "label": True,
-#         "FeO_pct": ":.2f",
-#         "SiO2_pct": ":.2f",
-#         "Al2O3_pct": ":.2f",
-#         # "site_name": True,
-#         # "sample_name": True,
-#     }
-
-#     # Add dataset ONLY if it exists
-#     if "dataset" in merged_df.columns:
-#         hover_data["dataset"] = True
-
-#     fig = px.scatter_ternary(
-#         merged_df,
-#         a="FeO_pct",
-#         b="SiO2_pct",
-#         c="Al2O3_pct",
-#         color="site_name",
-#         hover_name="label",
-#         hover_data=hover_data,
-#     )
-
-#     fig.update_layout(
-#         height=600,
-#         # margin=dict(t=20, b=10, l=10, r=10),
-#         ternary=dict(
-#             sum=100,
-#             aaxis_title="FeO (%)",
-#             baxis_title="SiO2 (%)",
-#             caxis_title="Al2O3 (%)",
-#         ),
-#         legend_title_text="site_name",
-#     )
-
-#     ref_html = html.Div([
-#         # html.H4("Sources & References"),
-#         html.Ul([
-#             html.Li([
-#                 html.Span("Reference: "),
-#                 refbib, html.Span("  "),
-#                 html.Img(
-#                         src="/dash/assets/lod-licences-cc-by.png",
-#                         style={
-#                             "height": "25px",
-#                             "verticalAlign": "middle",
-#                             "marginRight": "5px"
-#                             }
-#                          )
-#             ]),
-#             html.Li([
-#                 html.Span("Data: "), 
-#                 html.A("API", href=dataset_url, target="_blank"), 
-#                 html.Span(" | "), 
-#                 html.A("CSV", id='tern-download-csv-btn', n_clicks=0, href="#"), dcc.Download(id='tern-download-csv')
-#             ]),
-#         ])
-#     ], style={'marginTop': '0px'})
-
-#     return fig, ref_html
 
 def create_figure_ternary(dataset_url, log10=False, selected_sites=None, tern_axes="FeO_SiO2_Al2O3"):
     """
@@ -653,7 +506,7 @@ def generate_dataset_page(dataset_url, slug):
             'overflowY': 'auto'
         }, 
         children=[
-                html.H3(f"{dataset_name}", style={"marginBottom": "20px"}),
+                html.H2(f"{dataset_name}", style={"marginBottom": "20px"}),
                 html.Ul([
                     html.Li(html.A("🏠 Back to Home", href="/dash/")),
                     html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
@@ -688,6 +541,7 @@ def generate_dataset_page(dataset_url, slug):
                     # html.H1(tit),
                     # html.H3(f"{dataset_name}", style={"marginBottom": "20px"}),
                     dcc.Store(id='current-dataset-url', data=dataset_url),
+                    dcc.Store(id="current-slug", data=slug),
                     dcc.RadioItems(
                         id='scale-selector',
                         options=[
@@ -771,6 +625,7 @@ def generate_dataset_page_ternary(dataset_url, slug):
                 html.Div(style={'flex': '1', 'paddingRight': '20px'}, children=[
                     # html.H3(f"{dataset_name}", style={"marginBottom": "20px"}),
                     dcc.Store(id='tern-current-dataset-url', data=dataset_url),
+                    dcc.Store(id="tern-current-slug", data=slug),
                     dcc.RadioItems(
                         id="tern-axes-selector",
                         options=[
@@ -820,17 +675,6 @@ def update_graph(scale_mode, dataset_url, selected_sites):
     log10 = scale_mode == 'log'
     fig, ref_html = create_figure_linechart(dataset_url, log10=log10, selected_sites=selected_sites)
     return fig, ref_html
-
-# @app.callback(
-#     Output('ternary-graph', 'figure'),
-#     Output('tern-reference-info', 'children'),
-#     Input('tern-current-dataset-url', 'data'),
-#     Input('tern-site-filter', 'value'),
-# )
-# def update_ternary_graph(dataset_url, selected_sites):
-#     """Update the ternary chart"""
-#     fig, ref_html = create_figure_ternary(dataset_url, log10=False, selected_sites=selected_sites)
-#     return fig, ref_html
 
 @app.callback(
     Output("ternary-graph", "figure"),
@@ -897,36 +741,71 @@ def update_tern_site_filter(dataset_url, select_clicks, unselect_clicks):
     else:
         raise dash.exceptions.PreventUpdate
 
-
 @app.callback(
     Output('download-csv', 'data'),
     Input('download-csv-btn', 'n_clicks'),
     State('current-dataset-url', 'data'),
+    State('current-slug', 'data'),
     prevent_initial_call=True
 )
-def download_csv(n_clicks, dataset_url):
-    # Recompute df_data from the same source used in create_figure_linechart
+def download_csv(n_clicks, dataset_url, slug):
     result = get_data(dataset_url, df["url_reference"], log10=True)
     df_data = result["data"]
+    return dcc.send_data_frame(
+        df_data.to_csv,
+        f"chips_{slug}_data.csv",
+        index=False
+    )
 
-    # Export df_data as CSV
-    return dcc.send_data_frame(df_data.to_csv, "chips_dataset.csv", index=False)
+# @app.callback(
+#     Output('download-csv', 'data'),
+#     Input('download-csv-btn', 'n_clicks'),
+#     State('current-dataset-url', 'data'),
+#     prevent_initial_call=True
+# )
+# def download_csv(n_clicks, dataset_url):
+#     # Recompute df_data from the same source used in create_figure_linechart
+#     result = get_data(dataset_url, df["url_reference"], log10=True)
+#     df_data = result["data"]
+#     # Export df_data as CSV
+#     return dcc.send_data_frame(df_data.to_csv, "chips_dataset.csv", index=False)
 
+# @app.callback(
+#     Output('tern-download-csv', 'data'),
+#     Input('tern-download-csv-btn', 'n_clicks'),
+#     State('tern-current-dataset-url', 'data'),
+#     State('tern-site-filter', 'value'),
+#     prevent_initial_call=True
+# )
+# def download_tern_csv(n_clicks, dataset_url, selected_sites):
+#     result = get_data(dataset_url, df["url_reference"], log10=False)
+#     df_data = result["data"]
+
+#     if selected_sites:
+#         df_data = df_data[df_data["site_name"].isin(selected_sites)].copy()
+
+#     return dcc.send_data_frame(df_data.to_csv, "chips_ternary_data.csv", index=False)
 @app.callback(
     Output('tern-download-csv', 'data'),
     Input('tern-download-csv-btn', 'n_clicks'),
     State('tern-current-dataset-url', 'data'),
+    State('tern-current-slug', 'data'),
     State('tern-site-filter', 'value'),
     prevent_initial_call=True
 )
-def download_tern_csv(n_clicks, dataset_url, selected_sites):
+def download_tern_csv(n_clicks, dataset_url, slug, selected_sites):
     result = get_data(dataset_url, df["url_reference"], log10=False)
     df_data = result["data"]
 
     if selected_sites:
-        df_data = df_data[df_data["site_name"].isin(selected_sites)].copy()
+        df_data = df_data[df_data["site_name"].isin(selected_sites)]
 
-    return dcc.send_data_frame(df_data.to_csv, "chips_ternary_data.csv", index=False)
+    return dcc.send_data_frame(
+        df_data.to_csv,
+        f"chips_{slug}_data.csv",
+        index=False
+    )
+
 
 # ----------- RUN SERVER ---------------- #
 
