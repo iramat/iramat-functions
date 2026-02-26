@@ -395,6 +395,47 @@ def create_figure_linechart(dataset_url, log10=True, selected_sites=None):
 
     return fig, ref_html
 
+def _empty_ternary_figure(message, dataset_url, refbib):
+    # TODO: generic function for empty figure with reference info
+    # TODO: add a link with the message, to the API
+    # fig = go.Figure()
+    # fig.update_layout(
+    #     title=message,
+    #     height=150,
+    #     margin=dict(t=50, b=50, l=50, r=50),
+    #     ternary=dict(sum=100)
+    # )
+    fig = go.Figure()
+    fig.add_annotation(
+        text=message, # 
+        x=0.5,
+        y=0.5,
+        xref="paper",
+        yref="paper",
+        showarrow=False,
+        font=dict(size=24),
+        align="center"
+    )
+
+    fig.update_layout(
+        height=400,
+        xaxis=dict(visible=False),
+        yaxis=dict(visible=False),
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        margin=dict(t=20, b=20, l=20, r=20),
+    )
+
+    ref_html = html.Div([
+        html.Ul([
+            html.Li([html.Span("Reference: "), refbib]),
+            html.Li([html.Span("Data: "),
+                     html.A("API", href=dataset_url, target="_blank")])
+        ])
+    ])
+
+    return fig, ref_html
+
 def create_figure_ternary(dataset_url, log10=False, selected_sites=None, tern_axes="FeO_SiO2_Al2O3"):
     """
     Create a ternary plot from a dataset, after converting elements -> oxides.
@@ -414,7 +455,7 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None, tern_ax
 
     if selected_sites:
         df_data = df_data[df_data["site_name"].isin(selected_sites)].copy()
-
+        
     df_data["label"] = "<b>" + df_data["site_name"].astype(str) + "</b> - " + df_data["sample_name"].astype(str)
     refbib = html.A(df_data.at[df_data.index[0], "reference"], href=df_data.at[df_data.index[0], "url"], target="_blank")
 
@@ -448,25 +489,47 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None, tern_ax
     }
     a_ox, b_ox, c_ox = axes_map.get(tern_axes, axes_map["FeO_SiO2_Al2O3"])
 
+    # required = [a_ox, b_ox, c_ox]
+    # missing = [c for c in required if c not in merged_df.columns]
+    # if missing:
+    #     fig = go.Figure()
+    #     fig.update_layout(
+    #         title=f"Missing required columns for ternary: {', '.join(missing)}",
+    #         height=600,
+    #         margin=dict(t=50, 
+    #                     b=50, 
+    #                     l=50, 
+    #                     r=50),
+    #     )
+    #     ref_html = html.Div([
+    #         html.Ul([
+    #             html.Li([html.Span("Reference: "), refbib]),
+    #             html.Li([html.Span("Data: "), html.A("API", href=dataset_url, target="_blank")]),
+    #         ])
+    #     ])
+    #     return fig, ref_html
     required = [a_ox, b_ox, c_ox]
+    # Check missing columns
     missing = [c for c in required if c not in merged_df.columns]
     if missing:
-        fig = go.Figure()
-        fig.update_layout(
-            title=f"Missing required columns for ternary: {', '.join(missing)}",
-            height=600,
-            margin=dict(t=50, 
-                        b=50, 
-                        l=50, 
-                        r=50),
+        return _empty_ternary_figure(
+            f"Missing required columns for ternary: {', '.join(missing)}",
+            dataset_url,
+            refbib
         )
-        ref_html = html.Div([
-            html.Ul([
-                html.Li([html.Span("Reference: "), refbib]),
-                html.Li([html.Span("Data: "), html.A("API", href=dataset_url, target="_blank")]),
-            ])
-        ])
-        return fig, ref_html
+
+    # Check columns that exist but are fully NaN or zero
+    invalid = []
+    for col in required:
+        if merged_df[col].dropna().empty or merged_df[col].sum(skipna=True) == 0:
+            invalid.append(col)
+
+    if invalid:
+        return _empty_ternary_figure(
+            f"No usable data for: {', '.join(invalid)}",
+            dataset_url,
+            refbib
+        )
 
     # Normalize the chosen oxides to 100
     total = merged_df[required].sum(axis=1)
@@ -548,9 +611,10 @@ def generate_dataset_page(dataset_url, slug):
             'overflowY': 'auto'
         }, 
         children=[
+                html.A("🏠 Back to Home", href="/dash/"),
                 html.H2(f"{dataset_name}", style={"marginBottom": "20px"}),
                 html.Ul([
-                    html.Li(html.A("🏠 Back to Home", href="/dash/")),
+                    # html.Li(html.A("🏠 Back to Home", href="/dash/")),
                     html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
                     html.Li(html.A("△ View Ternary Plot", href=f"/dash/charttern/{slug}"))
                 ]),
@@ -635,9 +699,10 @@ def generate_dataset_page_ternary(dataset_url, slug):
             'overflowY': 'auto'
         },
         children=[
+            html.A("🏠 Back to Home", href="/dash/"),
             html.H3(f"{dataset_name}", style={"marginBottom": "20px"}),
             html.Ul([
-                html.Li(html.A("🏠 Back to Home", href="/dash/")),
+                # html.Li(html.A("🏠 Back to Home", href="/dash/")),
                 html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
                 html.Li(html.A("📈 View Line Chart", href=f"/dash/{slug}")),
             ]),
@@ -696,7 +761,6 @@ def generate_dataset_page_ternary(dataset_url, slug):
                     html.Div(id='tern-reference-info'),
                 ])
             ]),
-            # dcc.Graph(id='ternary-graph')
             dcc.Loading(
                 type="default",
                 children=dcc.Graph(id='ternary-graph')
