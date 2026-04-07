@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>numismatic-IRAMAT</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="stylesheet" href="https://unpkg.com/mirador@latest/dist/mirador.min.css">
+</head>
+<body>
+  <div id="mirador-viewer"></div>
+  <script src="https://unpkg.com/mirador@latest/dist/mirador.min.js"></script>
+  <script>
+    Mirador.viewer({
+      id: "mirador-viewer",
+      workspace: {
+        type: "mosaic",
+      },
+      windows: [
+        {
+          manifestId: "https://iramat-apps.cnrs.fr/iiif/mirador/cdn/numismatic/1986.416.json",
+          thumbnailNavigationPosition: "far-bottom",
+        },
+        {
+          manifestId: "https://iramat-apps.cnrs.fr/iiif/mirador/cdn/numismatic/1986.417.json",
+          thumbnailNavigationPosition: "far-bottom",
+        },
+      ],
+    });
+  </script>
+</body>
+</html>
