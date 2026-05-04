@@ -28,9 +28,9 @@ def generate_all_datasets_map(df=None, dataset_map=None, dataset_slugs=None, col
     for slug in dataset_slugs:
         try:
             result = get_data(dataset_map[slug], df["url_reference"])
-            df_data = result["data"].dropna(subset=["latitude", "longitude"]).copy()
+            df_data = result["data"].dropna(subset=["northing", "easting"]).copy()
 
-            all_points_latlon.extend(zip(df_data["latitude"], df_data["longitude"]))
+            all_points_latlon.extend(zip(df_data["northing"], df_data["easting"]))
 
             for _, row in df_data.iterrows():
                 rec = row.to_dict()
@@ -44,8 +44,8 @@ def generate_all_datasets_map(df=None, dataset_map=None, dataset_slugs=None, col
 
                 # ensure required fields exist and are numbers
                 rec["dataset"] = slug
-                rec["latitude"] = float(row["latitude"])
-                rec["longitude"] = float(row["longitude"])
+                rec["northing"] = float(row["northing"])
+                rec["easting"] = float(row["easting"])
 
                 all_points_records.append(rec)
 
@@ -54,9 +54,9 @@ def generate_all_datasets_map(df=None, dataset_map=None, dataset_slugs=None, col
 
     # --- Compute map center ---
     if all_points_latlon:
-        latitudes, longitudes = zip(*all_points_latlon)
-        mean_lat = sum(latitudes) / len(latitudes)
-        mean_lon = sum(longitudes) / len(longitudes)
+        northings, eastings = zip(*all_points_latlon)
+        mean_lat = sum(northings) / len(northings)
+        mean_lon = sum(eastings) / len(eastings)
     else:
         mean_lat, mean_lon = 45, 5
 
@@ -71,9 +71,9 @@ def generate_all_datasets_map(df=None, dataset_map=None, dataset_slugs=None, col
     for idx, slug in enumerate(dataset_slugs):
         try:
             result = get_data(dataset_map[slug], df["url_reference"])
-            df_data = result["data"].dropna(subset=["latitude", "longitude"]).copy()
+            df_data = result["data"].dropna(subset=["northing", "easting"]).copy()
 
-            points = list(zip(df_data["longitude"], df_data["latitude"]))
+            points = list(zip(df_data["easting"], df_data["northing"]))
             if len(points) >= 3:
                 hull = MultiPoint(points).convex_hull
                 geojson = gpd.GeoSeries([hull]).__geo_interface__
@@ -92,7 +92,7 @@ def generate_all_datasets_map(df=None, dataset_map=None, dataset_slugs=None, col
 
             for _, row in df_data.iterrows():
                 folium.CircleMarker(
-                    location=[float(row["latitude"]), float(row["longitude"])],
+                    location=[float(row["northing"]), float(row["easting"])],
                     radius=2,
                     color=colors[idx % len(colors)],
                     fill=True,
@@ -291,7 +291,7 @@ console.log("OVERVIEW EXPORT SCRIPT LOADED");
 
         for (var i = 0; i < POINTS.length; i++) {{
           var p = POINTS[i];
-          var pt = turf.point([p.longitude, p.latitude]);
+          var pt = turf.point([p.easting, p.northing]);
           if (turf.booleanPointInPolygon(pt, shape)) {{
             selected.push(p);
           }}
@@ -332,15 +332,15 @@ def generate_one_dataset(df, slug, dataset_map = None, ):
 
     result = get_data(dataset_map[slug], df["url_reference"])
     df_data = result['data']
-    df_data = df_data.dropna(subset=['latitude', 'longitude'])
+    df_data = df_data.dropna(subset=['northing', 'easting'])
     
     df_data['dataset_name'] = slug
 
-    m = folium.Map(location=[df_data['latitude'].mean(), df_data['longitude'].mean()], zoom_start=5)
+    m = folium.Map(location=[df_data['northing'].mean(), df_data['easting'].mean()], zoom_start=5)
     marker_cluster = MarkerCluster().add_to(m)
 
     for name, group in df_data.groupby('dataset_name'):
-        points = list(zip(group['longitude'], group['latitude']))
+        points = list(zip(group['easting'], group['northing']))
         if len(points) >= 3:
             multipoint = MultiPoint(points)
             hull = multipoint.convex_hull
@@ -348,7 +348,7 @@ def generate_one_dataset(df, slug, dataset_map = None, ):
             folium.GeoJson(geojson, name=name, tooltip=name).add_to(m)
         for _, row in group.iterrows():
             folium.Marker(
-                location=[row['latitude'], row['longitude']],
+                location=[row['northing'], row['easting']],
                 tooltip=row['site_name']
             ).add_to(marker_cluster)
 
@@ -379,9 +379,9 @@ def generate_one_dataset(df, slug, dataset_map = None, ):
 #         try:
 #             result = get_data(dataset_map[slug], df["url_reference"])
 #             df_data = result['data']
-#             df_data = df_data.dropna(subset=['latitude', 'longitude'])
+#             df_data = df_data.dropna(subset=['northing', 'easting'])
 
-#             points = list(zip(df_data['longitude'], df_data['latitude']))
+#             points = list(zip(df_data['easting'], df_data['northing']))
 #             if len(points) >= 3:
 #                 # print(colors[idx % len(colors)])
 #                 multipoint = MultiPoint(points)
@@ -399,7 +399,7 @@ def generate_one_dataset(df, slug, dataset_map = None, ):
 
 #             for _, row in df_data.iterrows():
 #                 folium.CircleMarker(
-#                     location=[row['latitude'], row['longitude']],
+#                     location=[row['northing'], row['easting']],
 #                     radius=2,
 #                     color=colors[idx % len(colors)],
 #                     fill=True,
