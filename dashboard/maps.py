@@ -97,7 +97,7 @@ def generate_all_datasets_map(df=None, dataset_map=None, dataset_slugs=None, col
                     color=colors[idx % len(colors)],
                     fill=True,
                     fill_opacity=0.7,
-                    tooltip=row.get("site_name", slug),
+                    tooltip=row.get("context_name", slug),
                 ).add_to(m)
 
         except Exception as e:
@@ -349,7 +349,7 @@ def generate_one_dataset(df, slug, dataset_map = None, ):
         for _, row in group.iterrows():
             folium.Marker(
                 location=[row['northing'], row['easting']],
-                tooltip=row['site_name']
+                tooltip=row['context_name']
             ).add_to(marker_cluster)
 
     map_html = m.get_root().render()
@@ -404,7 +404,7 @@ def generate_one_dataset(df, slug, dataset_map = None, ):
 #                     color=colors[idx % len(colors)],
 #                     fill=True,
 #                     fill_opacity=0.7,
-#                     tooltip=row['site_name']
+#                     tooltip=row['context_name']
 #                 ).add_to(m)
 #         except Exception as e:
 #             print(f"Failed to load dataset {slug}: {e}")

@@ -303,7 +303,7 @@ def update_map_row_count(dataset_url):
         f"{len(df_data):,}",
         html.Br(),
         html.Strong("Sites: "),
-        f"{df_data['site_name'].nunique()}"
+        f"{df_data['context_name'].nunique()}"
     ])
 
 @app.callback(
@@ -327,10 +327,10 @@ def create_figure_linechart(dataset_url, log10=True, selected_sites=None):
     result = get_data(dataset_url, df["url_reference"], log10=log10)
     df_elt = result["elements"]
     df_data = result["data"]
-    df_data['label'] = '<b>' + df_data['site_name'] + '</b>' + " - " + df_data['sample_name']
+    df_data['label'] = '<b>' + df_data['context_name'] + '</b>' + " - " + df_data['sample_name']
 
-    # Assign 1 color per unique site_name
-    unique_sites = df_data["site_name"].unique()
+    # Assign 1 color per unique context_name
+    unique_sites = df_data["context_name"].unique()
     colors = px.colors.qualitative.Alphabet  # or any palette
     site_color_map = {site: colors[i % len(colors)] for i, site in enumerate(unique_sites)}
 
@@ -340,7 +340,7 @@ def create_figure_linechart(dataset_url, log10=True, selected_sites=None):
     fig = go.Figure()
 
     for idx, row in df_elt.iterrows():
-        site = df_data.loc[idx, 'site_name']
+        site = df_data.loc[idx, 'context_name']
         if selected_sites and site not in selected_sites:
             continue
 
@@ -454,9 +454,9 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None, tern_ax
     df_data = result["data"].copy()
 
     if selected_sites:
-        df_data = df_data[df_data["site_name"].isin(selected_sites)].copy()
+        df_data = df_data[df_data["context_name"].isin(selected_sites)].copy()
         
-    df_data["label"] = "<b>" + df_data["site_name"].astype(str) + "</b> - " + df_data["sample_name"].astype(str)
+    df_data["label"] = "<b>" + df_data["context_name"].astype(str) + "</b> - " + df_data["sample_name"].astype(str)
     refbib = html.A(df_data.at[df_data.index[0], "reference"], href=df_data.at[df_data.index[0], "url"], target="_blank")
 
     # Element -> oxide conversion factors
@@ -555,7 +555,7 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None, tern_ax
         a=a_pct,
         b=b_pct,
         c=c_pct,
-        color="site_name",
+        color="context_name",
         hover_name="label",
         hover_data=hover_data,
     )
@@ -572,7 +572,7 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None, tern_ax
             baxis_title=f"{b_ox} (%)",
             caxis_title=f"{c_ox} (%)",
         ),
-        legend_title_text="site_name",
+        legend_title_text="context_name",
     )
 
     ref_html = html.Div([
@@ -813,11 +813,11 @@ def update_site_filter(dataset_url, select_clicks, unselect_clicks):
 
     result = get_data(dataset_url, df["url_reference"], log10=True)
     df_data = result["data"]
-    site_names = sorted(df_data['site_name'].dropna().unique().tolist())
-    options = [{'label': name, 'value': name} for name in site_names]
+    context_names = sorted(df_data['context_name'].dropna().unique().tolist())
+    options = [{'label': name, 'value': name} for name in context_names]
 
     if triggered_id in ('select-all-sites', 'current-dataset-url'):
-        return options, site_names
+        return options, context_names
     elif triggered_id == 'unselect-all-sites':
         return options, []
     else:
@@ -834,14 +834,14 @@ def update_tern_site_filter(dataset_url, select_clicks, unselect_clicks):
     ctx = dash.callback_context
     triggered_id = ctx.triggered[0]['prop_id'].split('.')[0] if ctx.triggered else 'tern-current-dataset-url'
 
-    # Use same source as your other filter: data frame has site_name
+    # Use same source as your other filter: data frame has context_name
     result = get_data(dataset_url, df["url_reference"], log10=True)
     df_data = result["data"]
-    site_names = sorted(df_data['site_name'].dropna().unique().tolist())
-    options = [{'label': name, 'value': name} for name in site_names]
+    context_names = sorted(df_data['context_name'].dropna().unique().tolist())
+    options = [{'label': name, 'value': name} for name in context_names]
 
     if triggered_id in ('tern-select-all-sites', 'tern-current-dataset-url'):
-        return options, site_names
+        return options, context_names
     elif triggered_id == 'tern-unselect-all-sites':
         return options, []
     else:
@@ -888,7 +888,7 @@ def download_csv(n_clicks, dataset_url, slug):
 #     df_data = result["data"]
 
 #     if selected_sites:
-#         df_data = df_data[df_data["site_name"].isin(selected_sites)].copy()
+#         df_data = df_data[df_data["context_name"].isin(selected_sites)].copy()
 
 #     return dcc.send_data_frame(df_data.to_csv, "chips_ternary_data.csv", index=False)
 @app.callback(
@@ -904,7 +904,7 @@ def download_tern_csv(n_clicks, dataset_url, slug, selected_sites):
     df_data = result["data"]
 
     if selected_sites:
-        df_data = df_data[df_data["site_name"].isin(selected_sites)]
+        df_data = df_data[df_data["context_name"].isin(selected_sites)]
 
     return dcc.send_data_frame(
         df_data.to_csv,

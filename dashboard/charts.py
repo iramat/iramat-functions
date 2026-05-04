@@ -124,7 +124,7 @@ def api_pg_dataset_linechart(url_dataset, url_reference_elements, log10=True):
 #     pio.renderers.default = 'browser'  # Ouvre dans le navigateur par défaut
 #     Fig_plotly = px.scatter_ternary(merged_df,
 #                     a="FeO", b="SiO2", c="Al2O3",
-#                     color="site_name"
+#                     color="context_name"
 #                     )
 
 #     Fig_plotly.show()
