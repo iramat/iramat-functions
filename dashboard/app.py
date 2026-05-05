@@ -619,7 +619,7 @@ def generate_dataset_page(dataset_url, slug):
                     html.Li(html.A("△ View Ternary Plot", href=f"/dash/charttern/{slug}"))
                 ]),
 
-                html.H3("Filter by Site"),
+                html.H3("Filter by Context"),
 
                 html.Button("Select All", id='select-all-sites', n_clicks=0, style={'marginRight': '10px'}),
                 html.Button("Unselect All", id='unselect-all-sites', n_clicks=0),
@@ -707,7 +707,7 @@ def generate_dataset_page_ternary(dataset_url, slug):
                 html.Li(html.A("📈 View Line Chart", href=f"/dash/{slug}")),
             ]),
 
-            html.H3("Filter by Site"),
+            html.H3("Filter by Context"),
 
             html.Button("Select All", id='tern-select-all-sites', n_clicks=0, style={'marginRight': '10px'}),
             html.Button("Unselect All", id='tern-unselect-all-sites', n_clicks=0),
