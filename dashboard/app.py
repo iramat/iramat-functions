@@ -134,27 +134,31 @@ def generate_dataset_map(pathname, search):
                     )
                 ], style={"display": "flex", "alignItems": "center"}),
                 html.P([
-                        "This dashboard helps exploring the CHIPS Database. Only a part of the whole database is made public. See also ",
-                        # html.A("GitHub", 
-                        #        href="https://github.com/iramat/chips",
-                        #        target="_blank")
-                        html.A(
-                            children=[
-                                html.Img(
-                                    src="/dash/assets/app-github.png",
-                                    style={
-                                        "height": "20px",
-                                        "verticalAlign": "middle",
-                                        "marginRight": "5px"
-                                    }
-                                ),
-                                ""
-                            ],
-                            href="https://github.com/iramat/chips",
-                            target="_blank",
-                            style={"textDecoration": "none", "color": "black"}
-                        )
-                    ]),
+                    "This dashboard helps exploring the CHIPS Database. Only a part of the whole database is made public. Each dataset is a separate entity and can be cited individually, while the database itself has another type of mention (see ",
+                    html.A(
+                        "How-to-cite",
+                        href="https://iramat.github.io/chips/data/how-to-cite/",  # Replace with the actual link
+                        target="_blank",
+                        # style={"textDecoration": "none", "color": "inherit"}  # Optional: adjust styling
+                    ),
+                    "). See also ",
+                    html.A(
+                        children=[
+                            html.Img(
+                                src="/dash/assets/app-github.png",
+                                style={
+                                    "height": "20px",
+                                    "verticalAlign": "middle",
+                                    "marginRight": "5px"
+                                }
+                            ),
+                            ""
+                        ],
+                        href="https://github.com/iramat/chips",
+                        target="_blank",
+                        style={"textDecoration": "none", "color": "black"}
+                    )
+                ]),
                 html.H3("Datasets"),
                 html.Ul([
                     html.Li(html.A(slug, href=f"/dash/mapview?dataset={slug}")) for slug in dataset_slugs
