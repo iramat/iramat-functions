@@ -1,3 +1,5 @@
+#%%
+
 import numpy as np
 import pandas as pd
 import requests
@@ -18,23 +20,32 @@ from urls import read_data_urls
 
 #     """
     # Charger les données
-    
+
+#%%
+
 normalize_by='fe'
 order_atom_num=True
 sample_idx=0
 
-url_dataset = "https://raw.githubusercontent.com/iramat/iramat-dev/refs/heads/main/dbs/chips/urls_data.tsv"
-dataset = read_data_urls(read_ref=False)
+url_dataset = "https://raw.githubusercontent.com/iramat/chips/refs/heads/hugo-files/static/data/urls_data.tsv"
+dataset = read_data_urls(root_data_url=url_dataset, read_ref=False)
 url_data = dataset["url_data"]
-url_reference = dataset["url_reference"]
+references = read_data_urls(root_data_url=url_dataset, read_ref=True)
+url_reference = references["url_data"]
+
+#%%
 
 response_data = requests.get(url_data[0])
 data = response_data.json()
 df = pd.DataFrame(data)
 
-response_ref = requests.get(url_reference)
+#%%
+
+response_ref = requests.get(url_reference[0])
 ref_elements = response_ref.json()
 ref = pd.DataFrame(ref_elements)
+
+#%%
 
 # Calculer les valeurs normalisées au fer
 ref_column =  ['na', 'mg', 'al', 'si', 'p', 'k', 'ca', 'mn']
@@ -73,3 +84,5 @@ ax.set_title(f"Échantillon {sample_idx} - Profil chimique", size=14)
 
 plt.tight_layout()
 plt.show()
+
+# %%

@@ -1,4 +1,4 @@
-def read_data_urls(root_data_url="https://raw.githubusercontent.com/iramat/chips/refs/heads/main/urls/urls_data.tsv", reference="http://157.136.252.188:3000/ref_elements", read_ref=False):
+def read_data_urls(root_data_url="https://raw.githubusercontent.com/iramat/chips/refs/heads/hugo-files/static/data/urls_data.tsv", reference="http://157.136.252.188:3000/ref_elements", read_ref=False):
     """
     Read a GitHub dataset (TSV file) and retrieve URLs, values and other infos
 
@@ -27,6 +27,3 @@ def read_data_urls(root_data_url="https://raw.githubusercontent.com/iramat/chips
         "dataset_name": dataset_names,
         "description": description # TODO: grab bib ref
     }
-
-
-
