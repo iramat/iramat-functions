@@ -5,6 +5,38 @@ import sys
 import psycopg2
 from psycopg2 import sql
 
+#%% Read the ref elements from the API and save it as a TSV file in the static/data folder. This is a one-time operation to have a local copy of the reference elements data.
+
+import requests
+import csv
+
+# API endpoint
+api_url = "http://157.136.252.188:3000/ref_elements"
+
+# Fetch the JSON data
+response = requests.get(api_url)
+
+if response.status_code == 200:
+    json_data = response.json()
+
+    # Determine fieldnames from the first item in the JSON data
+    if isinstance(json_data, list) and len(json_data) > 0:
+        fieldnames = json_data[0].keys()
+    else:
+        fieldnames = []
+
+    # Write to TSV file
+    tsv_file = "C:\\Users\\TH282424\\Rprojects\\chips\\static\\data\\ref_elements.tsv"
+    with open(tsv_file, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter='\t')
+        writer.writeheader()
+        writer.writerows(json_data)
+
+    print(f"TSV file saved as {tsv_file}")
+else:
+    print(f"Failed to fetch data: HTTP {response.status_code}")
+
+#%%
 
 def db_connect(pg_creds = 'C:/Users/TH282424/Rprojects/iramat-dev/credentials/pg_credentials.json', verbose = True):
   """
@@ -27,6 +59,8 @@ def db_connect(pg_creds = 'C:/Users/TH282424/Rprojects/iramat-dev/credentials/pg
 
   return(engine)
 
+#%%
+
 def db_query(query = "SELECT * FROM instrument_incertitude;", engine=None, verbose = True):
   """
   Query a database
@@ -38,6 +72,8 @@ def db_query(query = "SELECT * FROM instrument_incertitude;", engine=None, verbo
 
   df = pd.read_sql(query, engine)
   return(df)
+
+#%%
 
 def db_store(data=None, verbose = True):
   """
@@ -53,6 +89,7 @@ def db_store(data=None, verbose = True):
   
   return(tmp.name)
 
+#%%
 
 def db_refbib(table = "instrument_incertitude", engine=None, output_format = "JSON", verbose = True):
   """
@@ -110,6 +147,8 @@ def db_refbib(table = "instrument_incertitude", engine=None, output_format = "JS
     return(bibref)
     # return(list(formatted_entries))
 
+#%%
+
 def db_edtf_maj(engine = None):
   """
   Update the edtf field from 'date_debut', 'date_fin', and 'doute_date' fields from the 'sites' table
@@ -139,6 +178,8 @@ def db_edtf_maj(engine = None):
 # import psycopg2
 # import pandas as pd
 
+#%%
+
 def db_edtf_format_year(year: int | None) -> str | None:
     """Format integer year to EDTF padded string, or None if missing."""
     if year is None:
@@ -148,6 +189,8 @@ def db_edtf_format_year(year: int | None) -> str | None:
     else:
         return f"{year:04d}"   # e.g. 450 -> 0450
 
+#%%
+
 def db_edtf_build_edtf(start: int | None, end: int | None, doute: bool | None) -> str | None:
     """Construct EDTF interval string with ~ and optional ?."""
     if start is None or end is None:
@@ -156,6 +199,8 @@ def db_edtf_build_edtf(start: int | None, end: int | None, doute: bool | None) -
     end_str = db_edtf_format_year(end)
     suffix = "~" if doute is False else "?~"
     return f"{start_str}{suffix}/{end_str}{suffix}"
+
+#%%
 
 def py_tempfile(response=None, module_name = "bdd"):
   """

@@ -3,12 +3,13 @@ import requests
 import pandas as pd
 import networkx as nx
 from pyvis.network import Network
+import re
 
 BASE = "https://entrepot.recherche.data.gouv.fr"
 DATAVERSE = "ndame_GTMetal_fer"
 
-OUTPUT_CSV = "./ndame/ndame_GTMetal_fer_titles_authors_keywords.csv"
-OUTPUT_HTML = "./ndame/ndame_GTMetal_fer_3mode_network.html"
+OUTPUT_CSV = "./ndame/ndame_GTMetal_fer_titles_authors_keywords_parentheses.csv"
+OUTPUT_HTML = "./ndame/ndame_GTMetal_fer_4mode_network.html"
 
 
 def get_citation_fields(item):
@@ -52,6 +53,23 @@ def clean_title(title):
     title = title.replace("de la ", "").strip()
     return title.replace(" de Notre-Dame de Paris", "").strip()
 
+def clean_title_parentheses(title):
+    in_parentheses = re.findall(r"\(([^()]*)\)", title)
+    for term in in_parentheses:
+        title = title.replace(f"({term})", "").strip()
+    return title
+
+def extract_parenthesized_terms(title):
+    """Return text values found inside parentheses in a title.
+
+    Example:
+        "Fer (clous)" -> ["clous"]
+    """
+    return [
+        value.strip()
+        for value in re.findall(r"\(([^()]*)\)", str(title))
+        if value.strip()
+    ]
 
 def wrap_label(text, max_chars=14):
     words = str(text).split()
@@ -97,6 +115,8 @@ def fetch_datasets():
 
             authors = extract_authors(item)
             keywords = extract_keywords(item)
+            parenthesized_terms = extract_parenthesized_terms(title)
+            title = clean_title_parentheses(title)
 
             rows.append({
                 "title": title,
@@ -104,6 +124,7 @@ def fetch_datasets():
                 "url": url,
                 "authors": "; ".join(authors),
                 "keywords": "; ".join(keywords),
+                "parenthesized_terms": "; ".join(parenthesized_terms),
             })
 
         start += per_page
@@ -166,6 +187,16 @@ def build_graph(df):
             )
             G.add_edge(title_id, keyword_id, relation="has keyword")
 
+        for term in split_semicolon(row.get("parenthesized_terms", "")):
+            term_id = f"parenthesis::{term}"
+            G.add_node(
+                term_id,
+                label=term,
+                node_type="parenthesis",
+                title=f"Parenthesized title term: {html.escape(term)}"
+            )
+            G.add_edge(title_id, term_id, relation="has parenthesized title term")
+
     return G
 
 
@@ -191,12 +222,14 @@ def export_html(G):
         "author": "#8ecae6",
         "title": "#ffb703",
         "keyword": "#90be6d",
+        "parenthesis": "#c77dff",
     }
 
     shapes = {
         "author": "dot",
         "title": "box",
         "keyword": "ellipse",
+        "parenthesis": "diamond",
     }
 
     for node_id, attrs in G.nodes(data=True):
