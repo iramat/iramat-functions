@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_87ff0dc28c5f035ade8d9b2086c310d9 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+<div id="map-legend" style="
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    z-index: 9999;
+    background: white;
+    padding: 10px 15px;
+    border-radius: 4px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.15);
+    font-size: 14px;
+    ">
+  <div style="font-weight:bold; margin-bottom:5px;">Site categoriesMM</div>
+  
+</div>
+    
+            <div class="folium-map" id="map_87ff0dc28c5f035ade8d9b2086c310d9" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_87ff0dc28c5f035ade8d9b2086c310d9 = L.map(
+                "map_87ff0dc28c5f035ade8d9b2086c310d9",
+                {
+                    center: [39.0, 12.0],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "maxBounds": [
+[
+-3,
+-11,
+],
+[
+44,
+24,
+],
+],
+  "zoom": 10,
+  "zoomControl": false,
+  "preferCanvas": false,
+  "dragging": false,
+  "scrollWheelZoom": false,
+  "doubleClickZoom": false,
+  "touchZoom": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_9d7973f671a4da3573a04b4941c45e0d = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}",
+                {
+  "minZoom": 5,
+  "maxZoom": 5,
+  "maxNativeZoom": 5,
+  "noWrap": false,
+  "attribution": "Tiles \u0026copy; Esri \u0026mdash; Source: US National Park Service",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_9d7973f671a4da3573a04b4941c45e0d.addTo(map_87ff0dc28c5f035ade8d9b2086c310d9);
+        
+    
+            var marker_cfb9f32212370b42b70e7b204fc03308 = L.marker(
+                [37.38, -5.98],
+                {
+}
+            ).addTo(map_87ff0dc28c5f035ade8d9b2086c310d9);
+        
+    
+            var icon_1f7ce2f7a2c6ccafdb6e938a0c3652b8 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "info-sign",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_1768892aa05aa890491c70986e30d7be = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_197f7273354c95c365b86e4938cee295 = $(`<div id="html_197f7273354c95c365b86e4938cee295" style="width: 100.0%; height: 100.0%;"><strong>Seville</strong></div>`)[0];
+                popup_1768892aa05aa890491c70986e30d7be.setContent(html_197f7273354c95c365b86e4938cee295);
+            
+        
+
+        marker_cfb9f32212370b42b70e7b204fc03308.bindPopup(popup_1768892aa05aa890491c70986e30d7be)
+        ;
+
+        
+    
+    
+            marker_cfb9f32212370b42b70e7b204fc03308.bindTooltip(
+                `<div>
+                     Seville
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_cfb9f32212370b42b70e7b204fc03308.setIcon(icon_1f7ce2f7a2c6ccafdb6e938a0c3652b8);
+            
+</script>
+</html>

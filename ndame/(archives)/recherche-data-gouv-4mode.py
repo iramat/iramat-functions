@@ -4,11 +4,6 @@ import pandas as pd
 import networkx as nx
 from pyvis.network import Network
 import re
-import time
-import json
-import subprocess
-
-
 
 BASE = "https://entrepot.recherche.data.gouv.fr"
 DATAVERSE = "ndame_GTMetal_fer"
@@ -18,7 +13,6 @@ OUTPUT_HTML = "./ndame/ndame_GTMetal_fer_4mode_network_new.html"
 
 
 def get_citation_fields(item):
-    """Return citation fields from the legacy expanded-search response."""
     return (
         item.get("metadataBlocks", {})
         .get("citation", {})
@@ -26,50 +20,29 @@ def get_citation_fields(item):
     )
 
 
-def _normalise_string_list(value):
-    """Normalise a Dataverse scalar/list field into a clean list of strings."""
-    if value is None:
-        return []
-    if isinstance(value, str):
-        return [value.strip()] if value.strip() else []
-    if isinstance(value, list):
-        return [str(v).strip() for v in value if v is not None and str(v).strip()]
-    return [str(value).strip()] if str(value).strip() else []
-
-
 def extract_keywords(item):
-    """Extract keywords from both the new and legacy Search API responses."""
-    # Current Recherche Data Gouv response: top-level `keywords` array.
-    direct = _normalise_string_list(item.get("keywords"))
-    if direct:
-        return direct
-
-    # Legacy response produced by metadata_fields=citation:*.
     keywords = []
+
     for field in get_citation_fields(item):
         if field.get("typeName") == "keyword":
             for kw in field.get("value", []):
                 value = kw.get("keywordValue", {}).get("value")
                 if value:
-                    keywords.append(str(value).strip())
+                    keywords.append(value.strip())
+
     return keywords
 
 
 def extract_authors(item):
-    """Extract authors from both the new and legacy Search API responses."""
-    # Current Recherche Data Gouv response: top-level `authors` array.
-    direct = _normalise_string_list(item.get("authors"))
-    if direct:
-        return direct
-
-    # Legacy response produced by metadata_fields=citation:*.
     authors = []
+
     for field in get_citation_fields(item):
         if field.get("typeName") == "author":
             for author in field.get("value", []):
                 name = author.get("authorName", {}).get("value")
                 if name:
-                    authors.append(str(name).strip())
+                    authors.append(name.strip())
+
     return authors
 
 def clean_title(title):
@@ -116,117 +89,10 @@ def wrap_label(text, max_chars=14):
 
     return "\n".join(lines)
 
-
-
-def _build_search_url(params):
-    """Build the exact API URL using requests' normal URL encoding."""
-    request = requests.Request(
-        "GET",
-        f"{BASE}/api/v1/search",
-        params=params,
-    ).prepare()
-    return request.url
-
-
-def _get_json_with_powershell(url, timeout=120):
-    """Fetch JSON through Windows PowerShell.
-
-    This fallback uses the Windows HTTP/proxy configuration, including
-    corporate proxy settings that Python requests may not discover.
-    """
-    escaped_url = url.replace("'", "''")
-
-    command = (
-        "$ErrorActionPreference='Stop';"
-        "$ProgressPreference='SilentlyContinue';"
-        "[Net.ServicePointManager]::SecurityProtocol="
-        "[Net.SecurityProtocolType]::Tls12;"
-        f"$r=Invoke-RestMethod -Uri '{escaped_url}' -Method Get "
-        "-Headers @{Accept='application/json';"
-        "'User-Agent'='ndame-dataverse-harvester/1.0'};"
-        "$r | ConvertTo-Json -Depth 100 -Compress"
-    )
-
-    completed = subprocess.run(
-        [
-            "powershell.exe",
-            "-NoProfile",
-            "-NonInteractive",
-            "-ExecutionPolicy",
-            "Bypass",
-            "-Command",
-            command,
-        ],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=timeout,
-        check=False,
-    )
-
-    if completed.returncode != 0:
-        error = completed.stderr.strip() or completed.stdout.strip()
-        raise RuntimeError(
-            "PowerShell could not retrieve the Dataverse API URL:\n"
-            f"{error}"
-        )
-
-    output = completed.stdout.strip().lstrip("\ufeff")
-    if not output:
-        raise RuntimeError("PowerShell returned an empty response.")
-
-    try:
-        return json.loads(output)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(
-            "PowerShell returned data that was not valid JSON. "
-            f"First 500 characters:\n{output[:500]}"
-        ) from exc
-
-
-def _request_dataverse_json(session, params):
-    """Try requests first, then Windows PowerShell as a proxy-aware fallback."""
-    url = _build_search_url(params)
-
-    try:
-        response = session.get(
-            f"{BASE}/api/v1/search",
-            params=params,
-            timeout=(20, 90),
-        )
-        print(f"GET with requests: {response.url}")
-        response.raise_for_status()
-        return response.json()
-
-    except (
-        requests.exceptions.ConnectionError,
-        requests.exceptions.Timeout,
-    ) as exc:
-        print(
-            "Python requests could not establish the connection.\n"
-            f"{exc}\n"
-            "Retrying through Windows PowerShell..."
-        )
-
-    # Invoke-RestMethod uses the Windows network/proxy configuration.
-    print(f"GET with PowerShell: {url}")
-    return _get_json_with_powershell(url)
-
-
 def fetch_datasets():
     rows = []
     start = 0
-    per_page = 100
-
-    session = requests.Session()
-
-    # Keep the default trust_env=True. Do not force a direct connection:
-    # corporate Windows networks may require their system proxy/PAC settings.
-    session.headers.update({
-        "User-Agent": "ndame-dataverse-harvester/1.0",
-        "Accept": "application/json",
-    })
+    per_page = 1000
 
     while True:
         params = {
@@ -235,51 +101,37 @@ def fetch_datasets():
             "subtree": DATAVERSE,
             "per_page": per_page,
             # "start": start,
-            # "sort": "date",
-            # "order": "desc",
+            # "metadata_fields": "citation:*",
         }
 
-        payload = _request_dataverse_json(session, params)
+        # quelque-chose comme: https://entrepot.recherche.data.gouv.fr/api/v1/search?q=*&type=dataset&subtree=ndame_GTMetal_fer&per_page=1000
+        r = requests.get(f"{BASE}/api/v1/search", params=params, timeout=60)
+        # r = requests.get(f"{BASE}/api/search", params=params, timeout=60)
+        r.raise_for_status()
+        data = r.json()["data"]
 
-        if payload.get("status") != "OK":
-            raise RuntimeError(
-                f"Dataverse API returned an error: {payload}"
-            )
+        for item in data["items"]:
+            title = clean_title(item.get("name", "").strip())
+            doi = item.get("global_id", "")
+            url = item.get("url", "")
 
-        data = payload.get("data", {})
-        items = data.get("items", [])
-        total_count = int(data.get("total_count", 0))
-
-        print(
-            f"Received {len(items)} datasets; "
-            f"offset={start}; total={total_count}"
-        )
-
-        for item in items:
-            original_title = str(item.get("name") or "").strip()
-            parenthesized_terms = extract_parenthesized_terms(original_title)
-
-            title = clean_title(original_title)
+            authors = extract_authors(item)
+            keywords = extract_keywords(item)
+            parenthesized_terms = extract_parenthesized_terms(title)
             title = clean_title_parentheses(title)
 
             rows.append({
                 "title": title,
-                "doi": str(item.get("global_id") or ""),
-                "url": str(item.get("url") or ""),
-                "authors": "; ".join(extract_authors(item)),
-                "keywords": "; ".join(extract_keywords(item)),
+                "doi": doi,
+                "url": url,
+                "authors": "; ".join(authors),
+                "keywords": "; ".join(keywords),
                 "parenthesized_terms": "; ".join(parenthesized_terms),
             })
 
-        if not items:
+        start += per_page
+        if start >= data["total_count"]:
             break
-
-        start += len(items)
-
-        if start >= total_count:
-            break
-
-        time.sleep(0.5)
 
     return pd.DataFrame(rows)
 

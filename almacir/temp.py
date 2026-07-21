@@ -1,0 +1,7 @@
+#%%
+
+DEFAULT_BOUNDS = [[-11, -6], [44, 17]]
+
+DEFAULT_CENTER = sum(DEFAULT_BOUNDS[0]) / 2, sum(DEFAULT_BOUNDS[1]) / 2
+DEFAULT_CENTER
+# %%
