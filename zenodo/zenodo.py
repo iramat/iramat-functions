@@ -8,11 +8,11 @@ import pandas as pd
 
 # a dataset number to test the code
 API_URL = "https://iramat-apps.cnrs.fr/api/dataset_gpages22"
-a_dataset = 3
+a_dataset = 4
 
-df = pd.read_csv("https://raw.githubusercontent.com/iramat/chips/refs/heads/hugo-files/static/data/urls_data.tsv", sep="\t")
+urls_data = pd.read_csv("https://raw.githubusercontent.com/iramat/chips/refs/heads/hugo-files/static/data/urls_data.tsv", sep="\t")
 
-#%% dataset creaors
+#%% METADATA dataset creaors
 
 def extract_author_part(reference: str) -> str:
     """
@@ -52,23 +52,16 @@ def split_person_name(full_name: str) -> tuple[str, str]:
 
 response = requests.get(API_URL, timeout=30)
 response.raise_for_status()
-
 data = response.json()
-
 if not data:
     raise ValueError("The API returned no records.")
 
-# First API record
-first_record = data[0]
-
+# First API record (METADATA only, metadata are the same for all records)
+first_record_METADATA = data[0]
 # Retrieve its reference field
-reference = first_record.get("reference")
-
+reference = first_record_METADATA.get("reference")
 if not reference:
     raise ValueError("The first record has no usable 'reference' field.")
-
-# print("Complete reference:")
-# print(reference)
 
 # Keep only the author section
 author_part = extract_author_part(reference)
@@ -89,37 +82,33 @@ for full_name in author_names:
         "name": f"{family_name}, {given_names}"
     })
 
-# zenodo_metadata = {
-#     "creators": creators
-# }
-
-# print("\nAuthor section:")
-# print(author_part)
-
 print("Zenodo creators:")
 print(json.dumps(creators_dataset, indent=2, ensure_ascii=False))
 
-# %% dataset number
+# %% METADATA dataset number
 
-num_dataset=df.loc[a_dataset, "dataset_num"]
-# dataset_num = df.get("dataset_num")
+num_dataset=urls_data.loc[a_dataset, "dataset_num"]
+# dataset_num = urls_data.get("dataset_num")
 num_dataset = re.sub(r"j\.id_dataset = ", "", num_dataset)
 print(f"Dataset number: {num_dataset}")
 
-# %% dataset name (title)
+# %% METADATA dataset name (title)
 
-nam_dataset=df.loc[a_dataset, "dataset_name"]
-# dataset_name = df.get("dataset_name")
+nam_dataset=urls_data.loc[a_dataset, "dataset_name"]
+# dataset_name = urls_data.get("dataset_name")
 nam_dataset = re.sub(r"dataset_", "", nam_dataset)
 dataset_title=f"CHIPS dataset: {nam_dataset} (num. {num_dataset})"
 print(f"Dataset title: {dataset_title}")
 
-# %% dataset description (abstract)
+# %% METADATA dataset description (abstract)
 
-dataset_description=df.loc[a_dataset, "description_txt"]
+dataset_description=urls_data.loc[a_dataset, "description_txt"]
 print(f"Dataset description: {dataset_description}")
 
-# %%
+# %% METADATA dataset publication URL
+publication_url = first_record_METADATA.get("url")
+
+# %% METADATA dataset create JSON object to be pushed on Zenodo
 
 def zn_metadata(verbose = True):
   """
@@ -139,11 +128,21 @@ def zn_metadata(verbose = True):
                        {"term": "chemical elements", "identifier": "https://apps.usgs.gov/thesaurus/term-simple.php?thcode=2&code=1427", "scheme": "url"}],
           'method': 'IRAMAT data entry methodology',
           'creators': creators_dataset,
+          "related_identifiers": [{"identifier": publication_url,
+				"relation": "isSupplementTo",
+				"resource_type": "publication-article"
+			}]
         #   'keywords': meta_data[0]['keywords'],
         #   'dates': [{"start": meta_data[0]['year'], "end": meta_data[0]['year'], "type": "Collected", "description": "Lorem Ipsum dates"}],
       }
   }
   return(metadata)
 
-zn_metadata()
+metadata = zn_metadata()
+print(json.dumps(metadata, indent=2, ensure_ascii=False))
+
+# %% DATA create the data file to be pushed on Zenodo
+
+data[0]
+
 # %%

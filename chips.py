@@ -276,32 +276,6 @@ def db_export_comments_to_excel(
         print("Done.")
     return output_path
 
-def zn_metadata(meta_data = None, verbose = True):
-  """
-  Fill a metadata template to be pushed on Zenodo from a bibtex reference stored in Postgres (table '_refbib'). This function is called after `db_refbib()`
-
-  :param meta_data: a JSON object
-  """
-
-  #TODO: check values, map values (https://github.com/zoometh/iramat-test/blob/main/projects/citation/bibtex2zenodo.tsv)
-
-  metadata = {
-      'metadata': {
-          'title': meta_data[0]['title'],
-          'description': meta_data[0]['abstract'],
-          'upload_type': 'dataset',
-          'license': 'cc-by',
-          'subjects': [{"term": "Archaeometry", "identifier": "http://id.loc.gov/authorities/subjects/sh85006517", "scheme": "url"},
-                       {"term": "laboratory methods", "identifier": "https://apps.usgs.gov/thesaurus/term-simple.php?thcode=2&code=619", "scheme": "url"},
-                       {"term": "chemical elements", "identifier": "https://apps.usgs.gov/thesaurus/term-simple.php?thcode=2&code=1427", "scheme": "url"}],
-          'method': 'IRAMAT data entry methodology',
-          'creators': [{'name': meta_data[0]['author'],
-                        'affiliation': "IRAMAT"}],
-          'keywords': meta_data[0]['keywords'],
-          'dates': [{"start": meta_data[0]['year'], "end": meta_data[0]['year'], "type": "Collected", "description": "Lorem Ipsum dates"}],
-      }
-  }
-  return(metadata)
 
 def _github_blob_to_raw(url: str) -> str:
     if url.startswith("https://github.com/") and "/blob/" in url:
