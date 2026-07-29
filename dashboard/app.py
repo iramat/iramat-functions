@@ -117,7 +117,7 @@ def generate_dataset_map(pathname, search):
                 html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
                 # html.H2("Welcome"),
                 html.Div([
-                    html.H2("Welcome to CHIPS ", style={"margin": "0", "marginRight": "10px"}),
+                    html.H2("CHIPS Dashboard", style={"margin": "0", "marginRight": "10px"}),
                     html.A(
                         children=[
                             html.Img(
@@ -137,7 +137,7 @@ def generate_dataset_map(pathname, search):
                     "This dashboard helps exploring the CHIPS Database. Only a part of the whole database is made public. Each dataset is a separate entity and can be cited individually, while the database itself has another type of mention (see ",
                     html.A(
                         "How-to-cite",
-                        href="https://iramat.github.io/chips/data/how-to-cite/",  # Replace with the actual link
+                        href="https://iramat.github.io/chips/docs/#how-to-cite",  # Replace with the actual link
                         target="_blank",
                         # style={"textDecoration": "none", "color": "inherit"}  # Optional: adjust styling
                     ),
@@ -154,7 +154,7 @@ def generate_dataset_map(pathname, search):
                             ),
                             ""
                         ],
-                        href="https://github.com/iramat/chips",
+                        href="https://iramat.github.io/chips/",
                         target="_blank",
                         style={"textDecoration": "none", "color": "black"}
                     )

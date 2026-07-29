@@ -1,18 +1,32 @@
 # to dump from the CHIPS API into Zenodo
 
-#%% 
+#%% Initiate
 import json
 import re
 import requests
 import pandas as pd
 
 # a dataset number to test the code
-API_URL = "https://iramat-apps.cnrs.fr/api/dataset_gpages22"
 a_dataset = 4
 
+# METADATA dataset API URL
 urls_data = pd.read_csv("https://raw.githubusercontent.com/iramat/chips/refs/heads/hugo-files/static/data/urls_data.tsv", sep="\t")
+API_URL = urls_data.loc[a_dataset, "url_data"]
+# DATA dataset API URL
+response = requests.get(API_URL, timeout=30)
+response.raise_for_status()
+data = response.json()
+if not data:
+    raise ValueError("The API returned no records.")
 
-#%% METADATA dataset creaors
+#%% METADATA dataset creators
+
+# First API record (METADATA only, metadata are the same for all records)
+first_record_METADATA = data[0]
+# Retrieve its reference field
+reference = first_record_METADATA.get("reference")
+if not reference:
+    raise ValueError("The first record has no usable 'reference' field.")
 
 def extract_author_part(reference: str) -> str:
     """
@@ -22,13 +36,11 @@ def extract_author_part(reference: str) -> str:
         Given Family, Given Family (2022), Article title, ...
     """
     match = re.match(r"^(.*?)\s*\(\d{4}\)", reference)
-
     if not match:
         raise ValueError(
             "Could not identify an author list followed by a year "
             f"in this reference: {reference!r}"
         )
-
     return match.group(1).strip().rstrip(",")
 
 
@@ -40,28 +52,11 @@ def split_person_name(full_name: str) -> tuple[str, str]:
     This assumes that the final word is the family name.
     """
     parts = full_name.strip().split()
-
     if len(parts) < 2:
         raise ValueError(f"Cannot split author name: {full_name!r}")
-
     given_names = " ".join(parts[:-1])
     family_name = parts[-1]
-
     return family_name, given_names
-
-
-response = requests.get(API_URL, timeout=30)
-response.raise_for_status()
-data = response.json()
-if not data:
-    raise ValueError("The API returned no records.")
-
-# First API record (METADATA only, metadata are the same for all records)
-first_record_METADATA = data[0]
-# Retrieve its reference field
-reference = first_record_METADATA.get("reference")
-if not reference:
-    raise ValueError("The first record has no usable 'reference' field.")
 
 # Keep only the author section
 author_part = extract_author_part(reference)
@@ -94,10 +89,10 @@ print(f"Dataset number: {num_dataset}")
 
 # %% METADATA dataset name (title)
 
-nam_dataset=urls_data.loc[a_dataset, "dataset_name"]
+name_dataset=urls_data.loc[a_dataset, "dataset_name"]
 # dataset_name = urls_data.get("dataset_name")
-nam_dataset = re.sub(r"dataset_", "", nam_dataset)
-dataset_title=f"CHIPS dataset: {nam_dataset} (num. {num_dataset})"
+name_dataset = re.sub(r"dataset_", "", name_dataset)
+dataset_title=f"CHIPS dataset: {name_dataset} (num. {num_dataset})"
 print(f"Dataset title: {dataset_title}")
 
 # %% METADATA dataset description (abstract)
@@ -143,6 +138,18 @@ print(json.dumps(metadata, indent=2, ensure_ascii=False))
 
 # %% DATA create the data file to be pushed on Zenodo
 
-data[0]
+# type(data[0])
+df = pd.DataFrame.from_dict(data)
+# df.head()
+df.columns
+
+# %%
+
+df.drop(["reference", "url"], axis=1)
+
+# %%
+
+# the filename that will be used to push the data on Zenodo
+name_file = f"{name_dataset}_chips{num_dataset}.csv"
 
 # %%
