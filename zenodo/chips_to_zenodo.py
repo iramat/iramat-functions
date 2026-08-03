@@ -10,7 +10,7 @@ Create and publish all datasets:
     python3 chips_to_zenodo.py --publish
     
 Process selected TSV row indices only (1 dataset):
-    python3 chips_to_zenodo.py --rows 1 --publish
+    python3 chips_to_zenodo.py --rows 4 --publish
 
 Process selected TSV row indices only (3 datasets):
     python3 chips_to_zenodo.py --rows 1 4 7 --publish
@@ -32,6 +32,7 @@ import time
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
+import unicodedata
 
 import pandas as pd
 import requests
@@ -44,6 +45,7 @@ ZENODO_API = "https://sandbox.zenodo.org/api/deposit/depositions"
 # ZENODO_API = "https://zenodo.org/api/deposit/depositions"
 DEFAULT_CREDENTIALS = Path("/home/ubuntu/zenodo/credentials/zn_sandbox_credentials.json")
 DEFAULT_STATE_FILE = Path("/home/ubuntu/zenodo/chips_zenodo_state.json")
+AUTHORS_ORCID_API = "https://iramat-apps.cnrs.fr/api/auteurs_orcid"
 DEFAULT_URLS_DATA = (
     "https://raw.githubusercontent.com/iramat/chips/"
     "refs/heads/hugo-files/static/data/urls_data.tsv"
@@ -104,6 +106,71 @@ REQUIRED_TSV_COLUMNS = {
 class DatasetError(RuntimeError):
     """Raised when one CHIPS dataset cannot be processed safely."""
 
+def normalize_person_name(value: str) -> str:
+    """Normalize a person's name for reliable lookup."""
+    normalized = unicodedata.normalize("NFKC", value)
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+    return normalized.casefold()
+
+def fetch_orcid_lookup(
+    session: requests.Session,
+    api_url: str = AUTHORS_ORCID_API,
+) -> dict[str, dict[str, str]]:
+    response = session.get(api_url, timeout=(15, 120))
+    raise_for_api_error(response, f"Reading authors ORCID API {api_url}")
+
+    try:
+        records = response.json()
+    except ValueError as exc:
+        raise DatasetError(
+            f"Authors ORCID API did not return valid JSON: {api_url}"
+        ) from exc
+
+    if not isinstance(records, list):
+        raise DatasetError(
+            f"Unexpected JSON structure from authors ORCID API: {api_url}"
+        )
+
+    lookup: dict[str, dict[str, str]] = {}
+
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+
+        full_name = clean_text(record.get("name"))
+        first_name = clean_text(record.get("first_name"))
+        last_name = clean_text(record.get("last_name"))
+        orcid = clean_text(record.get("orcid"))
+
+        if not full_name or not first_name or not last_name:
+            logging.warning(
+                "Ignoring incomplete ORCID record: %r",
+                record,
+            )
+            continue
+
+        creator = {
+            "name": f"{last_name}, {first_name}",
+        }
+
+        if orcid:
+            creator["orcid"] = orcid
+
+        key = normalize_person_name(full_name)
+
+        if key in lookup:
+            logging.warning(
+                "Duplicate author name in ORCID directory: %s",
+                full_name,
+            )
+
+        lookup[key] = creator
+
+    logging.info(
+        "Loaded %s authors from the ORCID directory",
+        len(lookup),
+    )
+    return lookup
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -281,15 +348,46 @@ def split_person_name(full_name: str) -> tuple[str, str]:
     return parts[-1], " ".join(parts[:-1])
 
 
-def creators_from_reference(reference: str) -> list[dict[str, str]]:
+def creators_from_reference(
+    reference: str,
+    orcid_lookup: dict[str, dict[str, str]],
+) -> list[dict[str, str]]:
     author_part = extract_author_part(reference)
-    names = [name.strip() for name in author_part.split(",") if name.strip()]
+    names = [
+        name.strip()
+        for name in author_part.split(",")
+        if name.strip()
+    ]
+
     creators: list[dict[str, str]] = []
+
     for full_name in names:
+        key = normalize_person_name(full_name)
+        matched_creator = orcid_lookup.get(key)
+
+        if matched_creator is not None:
+            # Copy the dictionary so the shared lookup is never modified.
+            creators.append(dict(matched_creator))
+            continue
+
+        # Preserve the existing behaviour for authors absent from the directory.
         family_name, given_names = split_person_name(full_name)
-        creators.append({"name": f"{family_name}, {given_names}"})
+        creators.append(
+            {
+                "name": f"{family_name}, {given_names}",
+            }
+        )
+
+        logging.warning(
+            "No ORCID directory match for author %r",
+            full_name,
+        )
+
     if not creators:
-        raise DatasetError("No creators could be extracted from the reference.")
+        raise DatasetError(
+            "No creators could be extracted from the reference."
+        )
+
     return creators
 
 
@@ -393,7 +491,13 @@ def fetch_dataset(session: requests.Session, api_url: str) -> pd.DataFrame:
     return pd.DataFrame.from_records(records)
 
 
-def build_metadata(row: pd.Series, frame: pd.DataFrame, title_suffix: str) -> tuple[dict[str, Any], str]:
+def build_metadata(
+    row: pd.Series,
+    frame: pd.DataFrame,
+    title_suffix: str,
+    orcid_lookup: dict[str, dict[str, str]],
+) -> tuple[dict[str, Any], str]:
+# def build_metadata(row: pd.Series, frame: pd.DataFrame, title_suffix: str) -> tuple[dict[str, Any], str]:
     dataset_name = clean_text(row["dataset_name"])
     api_url = clean_text(row["url_data"])
     dataset_number = extract_dataset_number(row["dataset_num"])
@@ -408,7 +512,11 @@ def build_metadata(row: pd.Series, frame: pd.DataFrame, title_suffix: str) -> tu
     if not reference:
         raise DatasetError("The first API record has no usable 'reference' field.")
 
-    creators = creators_from_reference(reference)
+    # creators = creators_from_reference(reference)
+    creators = creators_from_reference(
+    reference,
+    orcid_lookup,
+    )
     dashboard_url = f"https://iramat-apps.cnrs.fr/dash/mapview?dataset={dataset_name}"
 
     clean_dataset_name = re.sub(r"^dataset_", "", dataset_name)
@@ -565,13 +673,20 @@ def process_dataset(
     row: pd.Series,
     title_suffix: str,
     publish: bool,
-) -> dict[str, Any]:
+    orcid_lookup: dict[str, dict[str, str]],
+    ) -> dict[str, Any]:
     dataset_name = clean_text(row["dataset_name"])
     api_url = clean_text(row["url_data"])
     logging.info("[%s] Reading %s from %s", row_index, dataset_name, api_url)
 
     frame = fetch_dataset(session, api_url)
-    metadata, filename = build_metadata(row, frame, title_suffix)
+    # metadata, filename = build_metadata(row, frame, title_suffix)
+    metadata, filename = build_metadata(
+    row,
+    frame,
+    title_suffix,
+    orcid_lookup,
+    )
 
     logging.info(
         "[%s] Creating deposit: %s (%s records)",
@@ -624,6 +739,12 @@ def main() -> int:
     token = load_token(args.credentials)
     session = build_session(token)
     state = load_state(args.state_file)
+    try:
+        # orcid_lookup = fetch_orcid_lookup(session)
+        orcid_lookup = fetch_orcid_lookup(requests.Session())
+    except (DatasetError, requests.RequestException) as exc:
+        logging.error("Cannot load authors ORCID directory: %s", exc)
+        return 2
 
     try:
         urls_data = pd.read_csv(args.urls_data, sep="\t", dtype=str)
@@ -670,6 +791,7 @@ def main() -> int:
                 row=row,
                 title_suffix=args.title_suffix,
                 publish=args.publish,
+                orcid_lookup=orcid_lookup,
             )
             state[state_key] = result
             save_state(args.state_file, state)
