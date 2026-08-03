@@ -1,0 +1,22 @@
+{
+  "dataset_gpages22": {
+    "dataset_name": "dataset_gpages22",
+    "deposition_id": 580009,
+    "filename": "gpages22_chips2.csv",
+    "html": "https://sandbox.zenodo.org/records/580009",
+    "published": true,
+    "record_id": 580009,
+    "row_index": 4,
+    "title": "CHIPS dataset 2 (gpages22)"
+  },
+  "dataset_gzabinski23": {
+    "dataset_name": "dataset_gzabinski23",
+    "deposition_id": 580011,
+    "filename": "gzabinski23_chips18.csv",
+    "html": "https://sandbox.zenodo.org/deposit/580011",
+    "published": false,
+    "record_id": 580011,
+    "row_index": 3,
+    "title": "CHIPS dataset 18 (gzabinski23)"
+  }
+}
