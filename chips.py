@@ -90,8 +90,9 @@ def db_store(data=None, verbose = True):
   return(tmp.name)
 
 #%%
+# Outdated
 
-def db_refbib(table = "instrument_incertitude", engine=None, output_format = "JSON", verbose = True):
+def db_refbib_old(table = "instrument_incertitude", engine=None, output_format = "JSON", verbose = True):
   """
   Query a table of bibliographic references related to different views. This bibliographic reference is for the whole Postgres table or view. It is different from bibliographic references related to rows. Bibliographic references are stored in the table '_refbib'. These references are stored as text, in a bibtex layout, in the column 'ref_biblio'. 
 
