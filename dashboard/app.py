@@ -39,9 +39,17 @@ coloramp_all_dataset_map='tab20b'
 tit = "CHIPS Dashboard"
 
 df = read_data_urls(read_ref=False)
-dataset_slugs = df['dataset_name']
-dataset_map = dict(zip(dataset_slugs, df['url_data']))
+# print(type(df))
 
+dataset_slugs = df['dataset_name']
+dataset_nums = df['dataset_num']
+dataset_map = dict(zip(dataset_slugs, df['url_data']))
+dataset_map_nums = dict(zip(dataset_slugs, df['dataset_num']))
+# avoiding '.0' in dataset numbers
+# dataset_map_nums = dict(zip(dataset_slugs, [str(num).rstrip('.0') if '.0' in str(num) else str(num) for num in dataset_nums]))
+# dataset_num = dataset_num.rstrip('.0') if '.0' in dataset_num else dataset_num
+# print(dataset_map_nums)
+# print(dataset_map_nums )
 # # Initialize app
 app = dash.Dash(
     __name__,
@@ -114,10 +122,9 @@ def generate_dataset_map(pathname, search):
     
     if path == "" or path == "index":
         return html.Div(style={'display': 'flex'}, children=[
-                html.Div(style={'width': '250px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
+                html.Div(style={'width': '280px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
                 # html.H2("Welcome"),
                 html.Div([
-                    html.H2("CHIPS Dashboard", style={"margin": "0", "marginRight": "10px"}),
                     html.A(
                         children=[
                             html.Img(
@@ -131,38 +138,93 @@ def generate_dataset_map(pathname, search):
                         href="https://iramat.github.io/chips/",
                         target="_blank",
                         style={"display": "flex", "alignItems": "center"}
-                    )
+                    ),
+                    html.H2(" CHIPS Dashboard", style={"margin": "0", "marginRight": "10px", "marginLeft": "10px"}),
+                    # html.A(
+                    #     children=[
+                    #         html.Img(
+                    #             src="/dash/assets/logo-chips-round.png",
+                    #             style={
+                    #                 "height": "40px", # Adjusted to match H2 better
+                    #                 "verticalAlign": "middle",
+                    #             }
+                    #         ),
+                    #     ],
+                    #     href="https://iramat.github.io/chips/",
+                    #     target="_blank",
+                    #     style={"display": "flex", "alignItems": "center"}
+                    # )
                 ], style={"display": "flex", "alignItems": "center"}),
                 html.P([
-                    "This dashboard helps exploring the CHIPS Database. Only a part of the whole database is made public. Each dataset is a separate entity and can be cited individually, while the database itself has another type of mention (see ",
+                    "This dashboard helps exploring the public side of the ",
+                    html.A(
+                            "CHIPS Database",
+                            href="https://iramat.github.io/chips/", 
+                            target="_blank",
+                            # style={"textDecoration": "none", "color": "inherit"}  # Optional: adjust styling
+                        ),
+                    # html.A(
+                    #     children=[
+                    #         html.Img(
+                    #             src="/dash/assets/app-github.png",
+                    #             style={
+                    #                 "height": "20px",
+                    #                 "verticalAlign": "middle",
+                    #                 "marginRight": "5px"
+                    #             }
+                    #         ),
+                    #         ""
+                    #     ],
+                    #     href="https://iramat.github.io/chips/",
+                    #     target="_blank",
+                    #     style={"textDecoration": "none", "color": "black"}
+                    # )
+                ]),
+                html.H3("Datasets"),
+                # html.Ul([
+                #     html.Li(html.A(slug, href=f"/dash/mapview?dataset={slug}")) for slug in dataset_slugs
+                # ])
+                # html.Ul([
+                #     html.Li(
+                #         html.A(
+                #             f"CHIPS dataset {dataset_map_nums[slug].rstrip('.0')} ({slug})",
+                #             href=f"/dash/mapview?dataset={slug}"
+                #         )
+                #     )
+                #     for slug in dataset_slugs
+                # ])
+                # html.Div([
+                #     html.A(
+                #         f"CHIPS dataset {dataset_map_nums[slug]} ({slug})",
+                #         href=f"/dash/mapview?dataset={slug}"
+                #     ),
+                #     html.Br()
+                #     for slug in dataset_slugs
+                # ])
+                html.Ul(
+                    [
+                        html.Li(
+                            html.A(
+                                f"- Dataset {dataset_map_nums[slug]} ({slug})",
+                                href=f"/dash/mapview?dataset={slug}"
+                            )
+                        )
+                        for slug in dataset_slugs
+                    ],
+                    style={
+                        "listStyleType": "none",
+                        "paddingLeft": 0,
+                        "marginLeft": 0,
+                    },
+                ),
+                "Each dataset is a separate entity and can be cited individually, while the CHIPS database itself has another type of mention (see ",
                     html.A(
                         "How-to-cite",
                         href="https://iramat.github.io/chips/docs/#how-to-cite",  # Replace with the actual link
                         target="_blank",
                         # style={"textDecoration": "none", "color": "inherit"}  # Optional: adjust styling
                     ),
-                    "). See also ",
-                    html.A(
-                        children=[
-                            html.Img(
-                                src="/dash/assets/app-github.png",
-                                style={
-                                    "height": "20px",
-                                    "verticalAlign": "middle",
-                                    "marginRight": "5px"
-                                }
-                            ),
-                            ""
-                        ],
-                        href="https://iramat.github.io/chips/",
-                        target="_blank",
-                        style={"textDecoration": "none", "color": "black"}
-                    )
-                ]),
-                html.H3("Datasets"),
-                html.Ul([
-                    html.Li(html.A(slug, href=f"/dash/mapview?dataset={slug}")) for slug in dataset_slugs
-                ])
+                    ")."
             ]),
             html.Div(style={'flex': '1', 'padding': '20px', 'height': '90vh'}, children=[
                 generate_all_datasets_map(df = df, dataset_map = dataset_map, dataset_slugs = dataset_slugs, coloramp=coloramp_all_dataset_map)
@@ -212,13 +274,14 @@ def generate_dataset_map(pathname, search):
         
         # HERE
         dataset_url = dataset_map.get(slug) # Data:
+        dataset_num = str(dataset_map_nums.get(slug)) # num dataset
+        # dataset_num = dataset_num.rstrip('.0') if '.0' in dataset_num else dataset_num
+        # print(type(dataset_num), dataset_num)
 
         return html.Div(style={'display': 'flex'}, children=[
-            html.Div(style={'width': '200px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
-                html.H2("CHIPS Dataset"),
-                html.P(html.A("🏠 Back to Home", href="/dash/")),
-                # html.Hr(),
-                html.H3(f"{slug}"),
+            html.Div(style={'width': '300px', 'padding': '20px', 'backgroundColor': '#f2f2f2'}, children=[
+                html.P(html.A("⬅ Home", href="/dash/")),
+                html.H3(f"Dataset {dataset_num} ({slug})"),
                 html.Ul([
                     html.H3("Data"),
                     
@@ -269,7 +332,8 @@ def generate_dataset_map(pathname, search):
         if slug in dataset_map:
             return html.Div(
                 style={'flex': '1', 'padding': '20px'},
-                children=[generate_dataset_page_ternary(dataset_map[slug], slug)]
+                # children=[generate_dataset_page_ternary(dataset_map[slug], slug)]
+                children=[generate_dataset_page_ternary(dataset_map[slug], dataset_map_nums[slug], slug)]
             )
         return html.Div([
             html.H2("404 - Page not found"),
@@ -282,7 +346,8 @@ def generate_dataset_map(pathname, search):
         return html.Div(
             style={'flex': '1', 'padding': '20px'},
             children=[
-                generate_dataset_page(dataset_map[slug], slug)
+                # generate_dataset_page(dataset_map[slug], slug)
+                generate_dataset_page(dataset_map[slug], dataset_map_nums[slug], slug)
             ]
         )
     else:
@@ -602,7 +667,7 @@ def create_figure_ternary(dataset_url, log10=False, selected_sites=None, tern_ax
     return fig, ref_html
 
 
-def generate_dataset_page(dataset_url, slug):
+def generate_dataset_page(dataset_url, dataset_num, slug):
     """Generate the Line Chart view of a dataset"""
     dataset_name = re.search(r'[^/]+$', dataset_url).group()
     return html.Div(style={'display': 'flex', 'height': '100vh'}, children=[
@@ -615,15 +680,15 @@ def generate_dataset_page(dataset_url, slug):
             'overflowY': 'auto'
         }, 
         children=[
-                html.A("🏠 Back to Home", href="/dash/"),
-                html.H2(f"{dataset_name}", style={"marginBottom": "20px"}),
+                html.A("⬅ Home", href="/dash/"),
+                # html.H2(f"{dataset_name}", style={"marginBottom": "20px"}),
+                html.H3(f"Dataset {dataset_num} ({dataset_name})", style={"marginBottom": "20px"}),
                 html.Ul([
-                    # html.Li(html.A("🏠 Back to Home", href="/dash/")),
                     html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
                     html.Li(html.A("△ View Ternary Plot", href=f"/dash/charttern/{slug}"))
                 ]),
 
-                html.H3("Filter by Context"),
+                html.H4("Filter by Context"),
 
                 html.Button("Select All", id='select-all-sites', n_clicks=0, style={'marginRight': '10px'}),
                 html.Button("Unselect All", id='unselect-all-sites', n_clicks=0),
@@ -689,7 +754,7 @@ def generate_dataset_page(dataset_url, slug):
         ])
     ])
 
-def generate_dataset_page_ternary(dataset_url, slug):
+def generate_dataset_page_ternary(dataset_url, dataset_num, slug):
     """Generate the Ternary Chart view of a dataset"""
     dataset_name = re.search(r'[^/]+$', dataset_url).group()
 
@@ -703,15 +768,14 @@ def generate_dataset_page_ternary(dataset_url, slug):
             'overflowY': 'auto'
         },
         children=[
-            html.A("🏠 Back to Home", href="/dash/"),
-            html.H3(f"{dataset_name}", style={"marginBottom": "20px"}),
+            html.A("⬅ Home", href="/dash/"),
+            html.H3(f"Dataset {dataset_num} ({dataset_name})", style={"marginBottom": "20px"}),
             html.Ul([
-                # html.Li(html.A("🏠 Back to Home", href="/dash/")),
                 html.Li(html.A("🗺️ View Map", href=f"/dash/mapview?dataset={slug}")),
                 html.Li(html.A("📈 View Line Chart", href=f"/dash/{slug}")),
             ]),
 
-            html.H3("Filter by Context"),
+            html.H4("Filter by Context"),
 
             html.Button("Select All", id='tern-select-all-sites', n_clicks=0, style={'marginRight': '10px'}),
             html.Button("Unselect All", id='tern-unselect-all-sites', n_clicks=0),
@@ -923,4 +987,4 @@ debug = True # Set to True for debugging
 
 if __name__ == '__main__':
     # app.run(debug=True, host='0.0.0.0', port=8050)
-    app.run(debug=debug, host="127.0.0.1", port=8051)
+    app.run(debug=debug, host="127.0.0.1", port=8052)

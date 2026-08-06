@@ -1,4 +1,5 @@
 def read_data_urls(root_data_url="https://raw.githubusercontent.com/iramat/chips/refs/heads/hugo-files/static/data/urls_data.tsv", reference="http://157.136.252.188:3000/ref_elements", read_ref=False):
+# def read_data_urls(root_data_url="https://raw.githubusercontent.com/iramat/chips/refs/heads/hugo-files/static/data/urls_data_temp.tsv", reference="http://157.136.252.188:3000/ref_elements", read_ref=False):
     """
     Read a GitHub dataset (TSV file) and retrieve URLs, values and other infos
 
@@ -10,7 +11,11 @@ def read_data_urls(root_data_url="https://raw.githubusercontent.com/iramat/chips
 
     # response_data_ref_list = requests.get(root_data_url)
     # response_data_ref_list.content
-    df = pd.read_csv(root_data_url, sep='\t')
+    df = pd.read_csv(root_data_url, 
+                     sep='\t',
+                     dtype={"dataset_num": "string"})
+    # print(df.head())
+    # df = df.sort_values("dataset_num", ascending=True)
     # convert to lower
     df['is_reference_data'] = df['is_reference_data'].str.lower()
     if(read_ref):
@@ -21,10 +26,12 @@ def read_data_urls(root_data_url="https://raw.githubusercontent.com/iramat/chips
     urls_data = list(df['url_data'])
     description = list(df['description'])
     dataset_names = [re.search(r'[^/]+$', url).group() for url in urls_data]
+    dataset_nums = list(df['dataset_num'])
     return {
         "url_reference": reference,
         "url_data": urls_data,
         "dataset_name": dataset_names,
+        "dataset_num": dataset_nums,
         "description": description # TODO: grab bib ref
     }
 
