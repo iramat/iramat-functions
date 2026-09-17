@@ -159,7 +159,7 @@ def generate_dataset_map(pathname, search):
                     "This dashboard helps exploring the public side of the ",
                     html.A(
                             "CHIPS Database",
-                            href="https://iramat.github.io/chips/", 
+                            href="https://iramat.github.io/chips/dashboard/", 
                             target="_blank",
                             # style={"textDecoration": "none", "color": "inherit"}  # Optional: adjust styling
                         ),
@@ -983,7 +983,7 @@ def download_tern_csv(n_clicks, dataset_url, slug, selected_sites):
 
 # ----------- RUN SERVER ---------------- #
 
-debug = True # Set to True for debugging
+debug = False # Set to True for debugging
 
 if __name__ == '__main__':
     # app.run(debug=True, host='0.0.0.0', port=8050)
