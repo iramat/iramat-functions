@@ -1,16 +1,11 @@
 from callbacks import register_callbacks
 
 import dash
-from dash import dcc, html, Input, Output, State
-import plotly.express as px  # only for color palettes
-import plotly.graph_objects as go
-import re
-import pandas as pd
+from dash import dcc, html
 # import folium
 # from folium.plugins import MarkerCluster
 # from shapely.geometry import MultiPoint
 # import geopandas as gpd
-from get_data import get_data
 from urls import read_data_urls
 
 

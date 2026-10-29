@@ -1,175 +1,90 @@
+"""Dash callbacks for maps and the three shared chart views."""
 import dash
 from dash import dcc, html, Input, Output, State
 from get_data import get_data
-from charts import create_figure_linechart, create_figure_ternary
+from charts import create_figure_linechart, create_figure_scatter, create_figure_ternary
 from pages import render_page
+
 
 def register_callbacks(app, df, dataset_slugs, dataset_map, dataset_map_nums, coloramp_all_dataset_map):
     reference_url = df["url_reference"]
 
-    @app.callback(
-        Output("page-content", "children"),
-        Input("url", "pathname"),
-        State("url", "search")
-    )
+    @app.callback(Output("page-content", "children"), Input("url", "pathname"), State("url", "search"))
     def display_page(pathname, search):
-        return render_page(pathname, search, df, dataset_slugs, dataset_map, dataset_map_nums, coloramp_all_dataset_map)
+        return render_page(pathname, search, df, dataset_slugs, dataset_map,
+                           dataset_map_nums, coloramp_all_dataset_map)
 
-    @app.callback(
-        Output("map-row-count", "children"),
-        Input("map-current-dataset-url", "data")
-    )
+    @app.callback(Output("map-row-count", "children"), Input("map-current-dataset-url", "data"))
     def update_map_row_count(dataset_url):
         if not dataset_url:
             return ""
+        data = get_data(dataset_url, reference_url, log10=False)["data"]
+        return html.Div([html.Strong("Samples: "), f"{len(data):,}", html.Br(),
+                         html.Strong("Sites: "), f"{data['context_name'].nunique()}"])
 
-        result = get_data(dataset_url, reference_url, log10=False)
-        df_data = result["data"]
-
-        return html.Div([
-            html.Strong("Samples: "),
-            f"{len(df_data):,}",
-            html.Br(),
-            html.Strong("Sites: "),
-            f"{df_data['context_name'].nunique()}"
-        ])
-
-
-    @app.callback(
-        Output("map-download-csv", "data"),
-        Input("map-download-csv-btn", "n_clicks"),
-        State("map-current-dataset-url", "data"),
-        State("map-current-slug", "data"),
-        prevent_initial_call=True
-    )
+    @app.callback(Output("map-download-csv", "data"), Input("map-download-csv-btn", "n_clicks"),
+                  State("map-current-dataset-url", "data"), State("map-current-slug", "data"),
+                  prevent_initial_call=True)
     def download_map_csv(n_clicks, dataset_url, slug):
-        result = get_data(dataset_url, reference_url, log10=False)
-        df_data = result["data"]
-        return dcc.send_data_frame(
-            df_data.to_csv,
-            f"chips_{slug}_data.csv",
-            index=False
-        )
+        data = get_data(dataset_url, reference_url, log10=False)["data"]
+        return dcc.send_data_frame(data.to_csv, f"chips_{slug}_data.csv", index=False)
 
+    @app.callback(Output("line-graph", "figure"), Output("line-reference-info", "children"),
+                  Input("line-scale-selector", "value"), Input("line-current-dataset-url", "data"),
+                  Input("line-site-filter", "value"))
+    def update_line(scale_mode, dataset_url, selected_sites):
+        return create_figure_linechart(dataset_url, log10=(scale_mode == "log"),
+                                       selected_sites=selected_sites, reference_url=reference_url)
 
-    @app.callback(
-        Output('dataset-graph', 'figure'),
-        Output('reference-info', 'children'),
-        Input('scale-selector', 'value'),
-        Input('current-dataset-url', 'data'),
-        Input('site-filter', 'value')
-    )
-    def update_graph(scale_mode, dataset_url, selected_sites):
-        """Update the linechart"""
-        log10 = scale_mode == 'log'
-        fig, ref_html = create_figure_linechart(dataset_url, log10=log10, selected_sites=selected_sites, reference_url=reference_url)
-        return fig, ref_html
+    @app.callback(Output("scatter-graph", "figure"), Output("scatter-reference-info", "children"),
+                  Input("scatter-current-dataset-url", "data"), Input("scatter-site-filter", "value"),
+                  Input("scatter-y-selector", "value"))
+    def update_scatter(dataset_url, selected_sites, y_oxide):
+        return create_figure_scatter(dataset_url, y_oxide=y_oxide,
+                                     selected_sites=selected_sites, reference_url=reference_url)
 
+    @app.callback(Output("ternary-graph", "figure"), Output("ternary-reference-info", "children"),
+                  Input("ternary-current-dataset-url", "data"), Input("ternary-site-filter", "value"),
+                  Input("ternary-axes-selector", "value"))
+    def update_ternary(dataset_url, selected_sites, tern_axes):
+        return create_figure_ternary(dataset_url, selected_sites=selected_sites,
+                                     tern_axes=tern_axes, reference_url=reference_url)
 
-    @app.callback(
-        Output("ternary-graph", "figure"),
-        Output("tern-reference-info", "children"),
-        Input("tern-current-dataset-url", "data"),
-        Input("tern-site-filter", "value"),
-        Input("tern-axes-selector", "value"),   # NEW
-    )
-    def update_ternary_graph(dataset_url, selected_sites, tern_axes):
-        fig, ref_html = create_figure_ternary(
-            dataset_url,
-            log10=False,
-            selected_sites=selected_sites,
-            tern_axes=tern_axes,                # NEW
-            reference_url=reference_url,
-        )
-        return fig, ref_html
+    # Register three structurally identical context selectors.
+    def register_context_selector(prefix):
+        @app.callback(Output(f"{prefix}-site-filter", "options"),
+                      Output(f"{prefix}-site-filter", "value"),
+                      Input(f"{prefix}-current-dataset-url", "data"),
+                      Input(f"{prefix}-select-all-sites", "n_clicks"),
+                      Input(f"{prefix}-unselect-all-sites", "n_clicks"))
+        def update_contexts(dataset_url, select_clicks, unselect_clicks):
+            if not dataset_url:
+                return [], []
+            data = get_data(dataset_url, reference_url, log10=False)["data"]
+            contexts = sorted(data["context_name"].dropna().unique().tolist())
+            options = [{"label": name, "value": name} for name in contexts]
+            triggered = dash.ctx.triggered_id
+            if triggered == f"{prefix}-unselect-all-sites":
+                return options, []
+            return options, contexts
+        return update_contexts
 
+    for prefix in ("line", "scatter", "ternary"):
+        register_context_selector(prefix)
 
-    @app.callback(
-        Output('site-filter', 'options'),
-        Output('site-filter', 'value'),
-        Input('current-dataset-url', 'data'),
-        Input('select-all-sites', 'n_clicks'),
-        Input('unselect-all-sites', 'n_clicks')#,
-        # prevent_initial_call=True
-    )
-    def update_site_filter(dataset_url, select_clicks, unselect_clicks):
-        ctx = dash.callback_context
-        triggered_id = ctx.triggered[0]['prop_id'].split('.')[0] if ctx.triggered else 'current-dataset-url'
+    def register_csv_download(prefix):
+        @app.callback(Output(f"{prefix}-download-csv", "data"),
+                      Input(f"{prefix}-download-csv-btn", "n_clicks"),
+                      State(f"{prefix}-current-dataset-url", "data"),
+                      State(f"{prefix}-current-slug", "data"),
+                      State(f"{prefix}-site-filter", "value"),
+                      prevent_initial_call=True)
+        def download_csv(n_clicks, dataset_url, slug, selected_sites):
+            data = get_data(dataset_url, reference_url, log10=False)["data"]
+            if selected_sites is not None:
+                data = data.loc[data["context_name"].isin(selected_sites)]
+            return dcc.send_data_frame(data.to_csv, f"chips_{slug}_data.csv", index=False)
+        return download_csv
 
-        result = get_data(dataset_url, reference_url, log10=True)
-        df_data = result["data"]
-        context_names = sorted(df_data['context_name'].dropna().unique().tolist())
-        options = [{'label': name, 'value': name} for name in context_names]
-
-        if triggered_id in ('select-all-sites', 'current-dataset-url'):
-            return options, context_names
-        elif triggered_id == 'unselect-all-sites':
-            return options, []
-        else:
-            raise dash.exceptions.PreventUpdate
-
-
-    @app.callback(
-        Output('tern-site-filter', 'options'),
-        Output('tern-site-filter', 'value'),
-        Input('tern-current-dataset-url', 'data'),
-        Input('tern-select-all-sites', 'n_clicks'),
-        Input('tern-unselect-all-sites', 'n_clicks'),
-    )
-    def update_tern_site_filter(dataset_url, select_clicks, unselect_clicks):
-        ctx = dash.callback_context
-        triggered_id = ctx.triggered[0]['prop_id'].split('.')[0] if ctx.triggered else 'tern-current-dataset-url'
-
-        # Use same source as your other filter: data frame has context_name
-        result = get_data(dataset_url, reference_url, log10=True)
-        df_data = result["data"]
-        context_names = sorted(df_data['context_name'].dropna().unique().tolist())
-        options = [{'label': name, 'value': name} for name in context_names]
-
-        if triggered_id in ('tern-select-all-sites', 'tern-current-dataset-url'):
-            return options, context_names
-        elif triggered_id == 'tern-unselect-all-sites':
-            return options, []
-        else:
-            raise dash.exceptions.PreventUpdate
-
-
-    @app.callback(
-        Output('download-csv', 'data'),
-        Input('download-csv-btn', 'n_clicks'),
-        State('current-dataset-url', 'data'),
-        State('current-slug', 'data'),
-        prevent_initial_call=True
-    )
-    def download_csv(n_clicks, dataset_url, slug):
-        result = get_data(dataset_url, reference_url, log10=True)
-        df_data = result["data"]
-        return dcc.send_data_frame(
-            df_data.to_csv,
-            f"chips_{slug}_data.csv",
-            index=False
-        )
-
-
-    @app.callback(
-        Output('tern-download-csv', 'data'),
-        Input('tern-download-csv-btn', 'n_clicks'),
-        State('tern-current-dataset-url', 'data'),
-        State('tern-current-slug', 'data'),
-        State('tern-site-filter', 'value'),
-        prevent_initial_call=True
-    )
-    def download_tern_csv(n_clicks, dataset_url, slug, selected_sites):
-        result = get_data(dataset_url, reference_url, log10=False)
-        df_data = result["data"]
-
-        if selected_sites:
-            df_data = df_data[df_data["context_name"].isin(selected_sites)]
-
-        return dcc.send_data_frame(
-            df_data.to_csv,
-            f"chips_{slug}_data.csv",
-            index=False
-        )
-
-
+    for prefix in ("line", "scatter", "ternary"):
+        register_csv_download(prefix)
