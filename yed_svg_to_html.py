@@ -4,7 +4,7 @@
 Usage: 
 
 python yed_svg_to_html_fixed.py diagram.svg -o index.html --title 'IRAMAT workflow'
-python yed_svg_to_html.py C:\Users\TH282424\Rprojects\iramat-dev\img\erd_workflow_general.svg -o iramat_workflow_interactive.html --title 'IT workflow'  
+python yed_svg_to_html.py C:/Users/TH282424/Rprojects/iramat-dev/img/erd_workflow_general.svg -o iramat_workflow_interactive.html --title 'IT workflow'  
 
 No third-party dependencies or CDN needed.
 """

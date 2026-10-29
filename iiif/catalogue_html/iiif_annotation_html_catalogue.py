@@ -3,6 +3,7 @@
 
 Requires: pip install requests
 Example:
+  python3 iiif_annotation_html_catalogue.py /home/ubuntu/iiif-data/viewer/_test/barre531_compare.html -o /home/ubuntu/web/catalogue
   python3 iiif_annotation_html_catalogue.py /home/ubuntu/iiif-data/viewer/_test/barre531_compare.html /home/ubuntu/iiif-data/viewer/_test/barre532_compare.html -o /home/ubuntu/web/catalogue
   python3 iiif_annotation_html_catalogue.py --directory /home/ubuntu/iiif-data/viewer/_test -o /home/ubuntu/web/catalogue
 """
